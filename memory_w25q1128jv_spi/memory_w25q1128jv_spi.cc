@@ -11,7 +11,7 @@ uint8_t MemoryW25q1128jvSpi::Init() {
     HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_SET);
 
     // Data holder for reading address
-    TelemetryData _init_Data;
+    afsTelemetryData _init_Data;
     // Reads Chip ID, if chip ID is not W25Q128JV_MEMORY, then return 0
     if (DeviceID() != 0xEF17) return 0;
 
@@ -19,12 +19,7 @@ uint8_t MemoryW25q1128jvSpi::Init() {
     // Result, address starts in the first empty page
     while (1) {
         // Reads a page of memory
-        Chip_Read(address);
-        // sets first 64 byte data package into variable
-        _init_Data = Data_Bundle[0];
-
-        // compares data package type variable with
-        if (_init_Data.type != (uint8_t)(0x00)) break;
+        Chip_Read(address);afsTelemetryData;
         address++;
     }
     return 1;
@@ -104,7 +99,7 @@ uint8_t MemoryW25q1128jvSpi::Chip_Erase() {
     return 1;
 }
 
-uint8_t MemoryW25q1128jvSpi::Chip_Write(TelemetryData data) {
+uint8_t MemoryW25q1128jvSpi::Chip_Write(afsTelemetryData data) {
     // making sure that control pins are always high
     HAL_GPIO_WritePin(wpPort, wpPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(holdPort, holdPin, GPIO_PIN_SET);
@@ -156,7 +151,7 @@ uint8_t MemoryW25q1128jvSpi::Chip_Write(TelemetryData data) {
     return 1;
 }
 
-MemoryW25q1128jvSpi::TelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read_address) {
+MemoryW25q1128jvSpi::afsTelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read_address) {
     // making sure that control pins are always high
     HAL_GPIO_WritePin(wpPort, wpPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(holdPort, holdPin, GPIO_PIN_SET);
@@ -165,7 +160,7 @@ MemoryW25q1128jvSpi::TelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read
     // initalisation of input, output, and dumby telemtrydata variable for temporary writing to DataBundle
     uint8_t Read_Data[4] = {0x03, (uint8_t)(read_address >> 8), (uint8_t)(read_address), 0x00};
     uint8_t out[256] = {0};
-    MemoryW25q1128jvSpi::TelemetryData Data;
+    MemoryW25q1128jvSpi::afsTelemetryData Data;
 
     // Reads address page in memory
     HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_RESET);
@@ -187,36 +182,36 @@ MemoryW25q1128jvSpi::TelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read
         Data.state = ((out[(64 * i) + 6] << 8) | (out[(64 * i) + 5]));
 
         // IMU Gyroscope data
-        Data.imuGyroscopeX = ((out[(64 * i) + 8] << 8) | (out[(64 * i) + 7]));
-        Data.imuGyroscopeY = ((out[(64 * i) + 10] << 8) | (out[(64 * i) + 9]));
-        Data.imuGyroscopeZ = ((out[(64 * i) + 12] << 8) | (out[(64 * i) + 11]));
+        Data.angularVelocityX = ((out[(64 * i) + 8] << 8) | (out[(64 * i) + 7]));
+        Data.angularVelocityY = ((out[(64 * i) + 10] << 8) | (out[(64 * i) + 9]));
+        Data.angularVelocityZ = ((out[(64 * i) + 12] << 8) | (out[(64 * i) + 11]));
         ;
 
         // IMU Accelerometer data
-        Data.imuAccelerometerX = ((out[(64 * i) + 14] << 8) | (out[(64 * i) + 13]));
-        Data.imuAccelerometerY = ((out[(64 * i) + 16] << 8) | (out[(64 * i) + 15]));
-        Data.imuAccelerometerZ = ((out[(64 * i) + 18] << 8) | (out[(64 * i) + 17]));
+        Data.accelerationX = ((out[(64 * i) + 14] << 8) | (out[(64 * i) + 13]));
+        Data.accelerationY = ((out[(64 * i) + 16] << 8) | (out[(64 * i) + 15]));
+        Data.accelerationZ = ((out[(64 * i) + 18] << 8) | (out[(64 * i) + 17]));
 
         // IMU Magnetometer data
-        Data.imuMagnetometerX = ((out[(64 * i) + 20] << 8) | (out[(64 * i) + 19]));
-        Data.imuMagnetometerY = ((out[(64 * i) + 22] << 8) | (out[(64 * i) + 21]));
-        Data.imuMagnetometerZ = ((out[(64 * i) + 24] << 8) | (out[(64 * i) + 23]));
+        Data.magneticFieldX = ((out[(64 * i) + 20] << 8) | (out[(64 * i) + 19]));
+        Data.magneticFieldY = ((out[(64 * i) + 22] << 8) | (out[(64 * i) + 21]));
+        Data.magneticFieldZ = ((out[(64 * i) + 24] << 8) | (out[(64 * i) + 23]));
 
         // altimeter data being concentated into corresponeding byes
-        Data.altimeterTemperature = ((out[(64 * i) + 25] << 8) | (out[(64 * i) + 24]));
-        Data.altimeterAltitude = ((out[(64 * i) + 29] << 24) | (out[(64 * i) + 28] << 16) | (out[(64 * i) + 27] << 8) | (out[(64 * i) + 26]));
+        Data.temperature = ((out[(64 * i) + 25] << 8) | (out[(64 * i) + 24]));
+        Data.altitude = ((out[(64 * i) + 29] << 24) | (out[(64 * i) + 28] << 16) | (out[(64 * i) + 27] << 8) | (out[(64 * i) + 26]));
 
-        // GNSS Earth-Centered Earth-Fixed xyz position data
-        Data.gnssEcefPositionX = ((out[(64 * i) + 33] << 24) | (out[(64 * i) + 32] << 16) | (out[(64 * i) + 31] << 8) | (out[(64 * i) + 30]));
-        Data.gnssEcefPositionY = ((out[(64 * i) + 37] << 24) | (out[(64 * i) + 36] << 16) | (out[(64 * i) + 35] << 8) | (out[(64 * i) + 34]));
-        Data.gnssEcefPositionZ = ((out[(64 * i) + 41] << 24) | (out[(64 * i) + 40] << 16) | (out[(64 * i) + 39] << 8) | (out[(64 * i) + 38]));
-        Data.gnssPositionAccuracy = ((out[(64 * i) + 45] << 24) | (out[(64 * i) + 44] << 16) | (out[(64 * i) + 43] << 8) | (out[(64 * i) + 42]));
+        // ECEF Earth-Centered Earth-Fixed xyz position data
+        Data.ecefPositionX = ((out[(64 * i) + 33] << 24) | (out[(64 * i) + 32] << 16) | (out[(64 * i) + 31] << 8) | (out[(64 * i) + 30]));
+        Data.ecefPositionY = ((out[(64 * i) + 37] << 24) | (out[(64 * i) + 36] << 16) | (out[(64 * i) + 35] << 8) | (out[(64 * i) + 34]));
+        Data.ecefPositionZ = ((out[(64 * i) + 41] << 24) | (out[(64 * i) + 40] << 16) | (out[(64 * i) + 39] << 8) | (out[(64 * i) + 38]));
+        Data.ecefPositionAccuracy = ((out[(64 * i) + 45] << 24) | (out[(64 * i) + 44] << 16) | (out[(64 * i) + 43] << 8) | (out[(64 * i) + 42]));
 
         // GNSS Earth-Centered Earth-Fixed xyz velocity data
-        Data.gnssEcefPositionX = ((out[(64 * i) + 50] << 24) | (out[(64 * i) + 49] << 16) | (out[(64 * i) + 48] << 8) | (out[(64 * i) + 47]));
-        Data.gnssEcefPositionY = ((out[(64 * i) + 54] << 24) | (out[(64 * i) + 53] << 16) | (out[(64 * i) + 52] << 8) | (out[(64 * i) + 51]));
-        Data.gnssEcefPositionZ = ((out[(64 * i) + 58] << 24) | (out[(64 * i) + 57] << 16) | (out[(64 * i) + 56] << 8) | (out[(64 * i) + 55]));
-        Data.gnssPositionAccuracy = ((out[(64 * i) + 62] << 24) | (out[(64 * i) + 61] << 16) | (out[(64 * i) + 60] << 8) | (out[(64 * i) + 59]));
+        Data.ecefVelocityX = ((out[(64 * i) + 50] << 24) | (out[(64 * i) + 49] << 16) | (out[(64 * i) + 48] << 8) | (out[(64 * i) + 47]));
+        Data.ecefVelocityY = ((out[(64 * i) + 54] << 24) | (out[(64 * i) + 53] << 16) | (out[(64 * i) + 52] << 8) | (out[(64 * i) + 51]));
+        Data.ecefVelocityZ = ((out[(64 * i) + 58] << 24) | (out[(64 * i) + 57] << 16) | (out[(64 * i) + 56] << 8) | (out[(64 * i) + 55]));
+        Data.ecefVelocityAccuracy = ((out[(64 * i) + 62] << 24) | (out[(64 * i) + 61] << 16) | (out[(64 * i) + 60] << 8) | (out[(64 * i) + 59]));
 
         // ctc table
         Data.crc = 0x0000;

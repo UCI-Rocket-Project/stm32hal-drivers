@@ -19,29 +19,29 @@
 class MemoryW25q1128jvSpi {
   public:
 #pragma pack(push, 1)
-    struct TelemetryData {
+    struct afsTelemetryData {
         uint8_t type = 0x00;
-        uint32_t timestamp = 0xFFFFFFFF;             // ms since startup
-        uint8_t state = 0x00;                        // state for AFS, unused on ECU
-        int16_t imuGyroscopeX = 0xFFFF;              // 0.061 deg/s per LSB
-        int16_t imuGyroscopeY = 0xFFFF;              // 0.061 deg/s per LSB
-        int16_t imuGyroscopeZ = 0xFFFF;              // 0.061 deg/s per LSB
-        int16_t imuAccelerometerX = 0xFFFF;          // 0.00073g per LSB
-        int16_t imuAccelerometerY = 0xFFFF;          // 0.00073g per LSB
-        int16_t imuAccelerometerZ = 0xFFFF;          // 0.00073g per LSB
-        int16_t imuMagnetometerX = 0xFFFF;           // 0.063 uT per LSB
-        int16_t imuMagnetometerY = 0xFFFF;           // 0.063 uT per LSB
-        int16_t imuMagnetometerZ = 0xFFFF;           // 0.063 uT per LSB
-        int16_t altimeterTemperature = 0xFFFF;       // 10^-2 C
-        int32_t altimeterAltitude = 0xFFFFFFFF;      // cm
-        int32_t gnssEcefPositionX = 0xFFFFFFFF;      // cm
-        int32_t gnssEcefPositionY = 0xFFFFFFFF;      // cm
-        int32_t gnssEcefPositionZ = 0xFFFFFFFF;      // cm
-        uint32_t gnssPositionAccuracy = 0xFFFFFFFF;  // cm
-        int32_t gnssEcefVelocityX = 0xFFFFFFFF;      // cm/s
-        int32_t gnssEcefVelocityY = 0xFFFFFFFF;      // cm/s
-        int32_t gnssEcefVelocityZ = 0xFFFFFFFF;      // cm/s
-        uint32_t gnssVelocityAccuracy = 0xFFFFFFFF;  // cm/s
+        uint32_t timestamp;
+        uint8_t state;
+        int16_t angularVelocityX = 0xFFFF;
+        int16_t angularVelocityY = 0xFFFF;
+        int16_t angularVelocityZ = 0xFFFF;
+        int16_t accelerationX = 0xFFFF;
+        int16_t accelerationY = 0xFFFF;
+        int16_t accelerationZ = 0xFFFF;
+        int16_t magneticFieldX = 0xFFFF;
+        int16_t magneticFieldY = 0xFFFF;
+        int16_t magneticFieldZ = 0xFFFF;
+        int16_t temperature = 0xFFFF;
+        int32_t altitude = 0xFFFFFFFF;
+        int32_t ecefPositionX = 0xFFFFFFFF;
+        int32_t ecefPositionY = 0xFFFFFFFF;
+        int32_t ecefPositionZ = 0xFFFFFFFF;
+        uint32_t ecefPositionAccuracy = 0xFFFFFFFF;
+        int32_t ecefVelocityX = 0xFFFFFFFF;
+        int32_t ecefVelocityY = 0xFFFFFFFF;
+        int32_t ecefVelocityZ = 0xFFFFFFFF;
+        uint32_t ecefVelocityAccuracy = 0xFFFFFFFF;
         uint16_t crc = 0x0000;
     };
 #pragma pack(pop)
@@ -113,16 +113,16 @@ class MemoryW25q1128jvSpi {
      * @brief Writes Telemetrydata stuct into TelemetryData Data_Bundle[4] array
      * @retval Operation status, 1 for success
      */
-    uint8_t Chip_Write(TelemetryData data);
+    uint8_t Chip_Write(afsTelemetryData data);
 
     /**
      * @brief Reads read_addess page data and returns eturns pointer to Data_Bundle array
      *
      */
-    TelemetryData *Chip_Read(uint32_t read_address);
+    afsTelemetryData *Chip_Read(uint32_t read_address);
 
     // Data bundle array consisting of 4, 64 byte, data packages outlined in struct Telemetrydata
-    MemoryW25q1128jvSpi::TelemetryData Data_Bundle[4];
+    MemoryW25q1128jvSpi::afsTelemetryData Data_Bundle[4];
 
   private:
     SPI_HandleTypeDef *spi;
