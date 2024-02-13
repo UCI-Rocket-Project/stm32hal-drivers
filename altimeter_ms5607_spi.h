@@ -2,7 +2,9 @@
 
 #include <math.h>
 
+#if defined(STM32F1)
 #include "stm32f1xx_hal.h"
+#endif
 
 #ifndef SERIAL_TIMEOUT
 #define SERIAL_TIMEOUT 10
