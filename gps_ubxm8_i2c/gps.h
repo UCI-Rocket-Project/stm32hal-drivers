@@ -23,7 +23,7 @@ class GPS {
         GPS();
         const GPSState getState();
         const GPSPollResult pollUpdate(I2C_HandleTypeDef* i2c);
-        const UBX_NAV_SOL_PAYLOAD getSolution();
+        const UBX_NAV_PVT_PAYLOAD getSolution();
         void reset();
 
     private:
