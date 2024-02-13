@@ -143,14 +143,14 @@ uint8_t MemoryW25q1128jvSpi::Chip_Write(TelemetryData data) {
     // Write Data bundle into memory
     HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_RESET);
     if (HAL_SPI_Transmit(spi, Page_program, 4, SPI_Timeout) != HAL_OK) return 0;
-    if (HAL_SPI_Transmit(spi, (uint8_t *)Data_Bundle, 256, SPI_Timeout) != HAL_OK) return 0; 
+    if (HAL_SPI_Transmit(spi, (uint8_t *)Data_Bundle, 256, SPI_Timeout) != HAL_OK) return 0;
     HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_SET);
 
     // Checks and waits until status register busy bit  is = 0
     // waits until page write is done
-    if (MemoryW25q1128jvSpi::Read_Status_Reg1(1, 0) == 0) return 0;  
+    if (MemoryW25q1128jvSpi::Read_Status_Reg1(1, 0) == 0) return 0;
 
-    //increments to the next page address
+    // increments to the next page address
     address++;
 
     return 1;
@@ -167,7 +167,7 @@ MemoryW25q1128jvSpi::TelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read
     uint8_t out[256] = {0};
     MemoryW25q1128jvSpi::TelemetryData Data;
 
-    //Reads address page in memory 
+    // Reads address page in memory
     HAL_GPIO_WritePin(csPort, csPin, GPIO_PIN_RESET);
     if (HAL_SPI_Transmit(spi, Read_Data, 4, SPI_Timeout) != HAL_OK) return Data_Bundle;
     if (HAL_SPI_Receive(spi, out, 256, SPI_Timeout) != HAL_OK) return Data_Bundle;
@@ -177,51 +177,51 @@ MemoryW25q1128jvSpi::TelemetryData *MemoryW25q1128jvSpi::Chip_Read(uint32_t read
     // waits until page read is done
     if (MemoryW25q1128jvSpi::Read_Status_Reg1(0x01, 1) == 0) return 0;
 
-    //organisation of Databundle from read page until Data_Bundle array
-    for (int i = 0; i < 4; i++) 
-    {
-        //Specifier for telemetry data
+    // organisation of Databundle from read page until Data_Bundle array
+    for (int i = 0; i < 4; i++) {
+        // Specifier for telemetry data
         Data.type = out[(64 * i)];
-        //Timestamp for data
+        // Timestamp for data
         Data.timestamp = ((out[(64 * i) + 4] << 24) | (out[(64 * i) + 3] << 16) | (out[(64 * i) + 2] << 8) | (out[(64 * i) + 1]));
-        //What state AFS was in
+        // What state AFS was in
         Data.state = ((out[(64 * i) + 6] << 8) | (out[(64 * i) + 5]));
 
-        //IMU Gyroscope data
-        Data.imuGyroscopeX = ((out[(64 * i) +  8] << 8) | (out[(64 * i) +  7]));
-        Data.imuGyroscopeY = ((out[(64 * i) + 10] << 8) | (out[(64 * i) +  9]));
-        Data.imuGyroscopeZ = ((out[(64 * i) + 12] << 8) | (out[(64 * i) + 11]));;
+        // IMU Gyroscope data
+        Data.imuGyroscopeX = ((out[(64 * i) + 8] << 8) | (out[(64 * i) + 7]));
+        Data.imuGyroscopeY = ((out[(64 * i) + 10] << 8) | (out[(64 * i) + 9]));
+        Data.imuGyroscopeZ = ((out[(64 * i) + 12] << 8) | (out[(64 * i) + 11]));
+        ;
 
-        //IMU Accelerometer data
+        // IMU Accelerometer data
         Data.imuAccelerometerX = ((out[(64 * i) + 14] << 8) | (out[(64 * i) + 13]));
         Data.imuAccelerometerY = ((out[(64 * i) + 16] << 8) | (out[(64 * i) + 15]));
         Data.imuAccelerometerZ = ((out[(64 * i) + 18] << 8) | (out[(64 * i) + 17]));
 
-        //IMU Magnetometer data
+        // IMU Magnetometer data
         Data.imuMagnetometerX = ((out[(64 * i) + 20] << 8) | (out[(64 * i) + 19]));
         Data.imuMagnetometerY = ((out[(64 * i) + 22] << 8) | (out[(64 * i) + 21]));
         Data.imuMagnetometerZ = ((out[(64 * i) + 24] << 8) | (out[(64 * i) + 23]));
 
-        //altimeter data being concentated into corresponeding byes
+        // altimeter data being concentated into corresponeding byes
         Data.altimeterTemperature = ((out[(64 * i) + 25] << 8) | (out[(64 * i) + 24]));
-        Data.altimeterAltitude =    ((out[(64 * i) + 29] << 24) | (out[(64 * i) + 28] << 16) | (out[(64 * i) + 27] << 8) | (out[(64 * i) + 26]));
+        Data.altimeterAltitude = ((out[(64 * i) + 29] << 24) | (out[(64 * i) + 28] << 16) | (out[(64 * i) + 27] << 8) | (out[(64 * i) + 26]));
 
-        //GNSS Earth-Centered Earth-Fixed xyz position data
-        Data.gnssEcefPositionX    = ((out[(64 * i) + 33] << 24) | (out[(64 * i) + 32] << 16) | (out[(64 * i) + 31] << 8) | (out[(64 * i) + 30]));
-        Data.gnssEcefPositionY    = ((out[(64 * i) + 37] << 24) | (out[(64 * i) + 36] << 16) | (out[(64 * i) + 35] << 8) | (out[(64 * i) + 34]));
-        Data.gnssEcefPositionZ    = ((out[(64 * i) + 41] << 24) | (out[(64 * i) + 40] << 16) | (out[(64 * i) + 39] << 8) | (out[(64 * i) + 38]));
+        // GNSS Earth-Centered Earth-Fixed xyz position data
+        Data.gnssEcefPositionX = ((out[(64 * i) + 33] << 24) | (out[(64 * i) + 32] << 16) | (out[(64 * i) + 31] << 8) | (out[(64 * i) + 30]));
+        Data.gnssEcefPositionY = ((out[(64 * i) + 37] << 24) | (out[(64 * i) + 36] << 16) | (out[(64 * i) + 35] << 8) | (out[(64 * i) + 34]));
+        Data.gnssEcefPositionZ = ((out[(64 * i) + 41] << 24) | (out[(64 * i) + 40] << 16) | (out[(64 * i) + 39] << 8) | (out[(64 * i) + 38]));
         Data.gnssPositionAccuracy = ((out[(64 * i) + 45] << 24) | (out[(64 * i) + 44] << 16) | (out[(64 * i) + 43] << 8) | (out[(64 * i) + 42]));
 
-        //GNSS Earth-Centered Earth-Fixed xyz velocity data
-        Data.gnssEcefPositionX    = ((out[(64 * i) + 50] << 24) | (out[(64 * i) + 49] << 16) | (out[(64 * i) + 48] << 8) | (out[(64 * i) + 47]));
-        Data.gnssEcefPositionY    = ((out[(64 * i) + 54] << 24) | (out[(64 * i) + 53] << 16) | (out[(64 * i) + 52] << 8) | (out[(64 * i) + 51]));
-        Data.gnssEcefPositionZ    = ((out[(64 * i) + 58] << 24) | (out[(64 * i) + 57] << 16) | (out[(64 * i) + 56] << 8) | (out[(64 * i) + 55]));
+        // GNSS Earth-Centered Earth-Fixed xyz velocity data
+        Data.gnssEcefPositionX = ((out[(64 * i) + 50] << 24) | (out[(64 * i) + 49] << 16) | (out[(64 * i) + 48] << 8) | (out[(64 * i) + 47]));
+        Data.gnssEcefPositionY = ((out[(64 * i) + 54] << 24) | (out[(64 * i) + 53] << 16) | (out[(64 * i) + 52] << 8) | (out[(64 * i) + 51]));
+        Data.gnssEcefPositionZ = ((out[(64 * i) + 58] << 24) | (out[(64 * i) + 57] << 16) | (out[(64 * i) + 56] << 8) | (out[(64 * i) + 55]));
         Data.gnssPositionAccuracy = ((out[(64 * i) + 62] << 24) | (out[(64 * i) + 61] << 16) | (out[(64 * i) + 60] << 8) | (out[(64 * i) + 59]));
 
-        //ctc table
-        Data.crc =0x0000;
+        // ctc table
+        Data.crc = 0x0000;
 
-        //insertion of organised data into data bundle
+        // insertion of organised data into data bundle
         Data_Bundle[i] = Data;
     }
     return Data_Bundle;
