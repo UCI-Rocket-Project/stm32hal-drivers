@@ -16,7 +16,7 @@ const GPSState GPS::getState() {
 
 const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
     if(state == GPSState::REQUEST_NOT_SENT) {
-        uint8_t message[4] = {0x01, 0x06, 0x00, 0x00};
+        uint8_t message[4] = {0x01, 0x07, 0x00, 0x00};
         sendUBX(message, 4, &hi2c3);
         state = GPSState::POLLING_RESPONSE;
     }
@@ -81,8 +81,8 @@ const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
     return GPSPollResult::POLL_OK;
 }
 
-const UBX_NAV_SOL_PAYLOAD GPS::getSolution() {
-    return *(UBX_NAV_SOL_PAYLOAD*)packetReader.getPayload();
+const UBX_NAV_PVT_PAYLOAD GPS::getSolution() {
+    return *(UBX_NAV_PVT_PAYLOAD*)packetReader.getPayload();
 }
 
 void GPS::reset() {
