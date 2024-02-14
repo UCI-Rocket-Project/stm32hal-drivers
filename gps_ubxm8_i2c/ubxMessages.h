@@ -13,7 +13,7 @@ struct UBX_NAV_PVT_PAYLOAD {
     uint8_t valid;
     uint32_t tAcc;
     int32_t nano;
-    uint8_t fixType;
+    GPSFixType fixType;
     uint8_t flags;
     uint8_t flags2;
     uint8_t numSV;
@@ -38,7 +38,7 @@ struct UBX_NAV_PVT_PAYLOAD {
 };
 #pragma pack(pop)
 
-enum class GPSFixType {
+enum class GPSFixType : uint8_t {
     NO_FIX,
     DEAD_RECKONING,
     FIX_2D,

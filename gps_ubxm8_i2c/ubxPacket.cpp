@@ -11,65 +11,53 @@ UBXPacketReader::UBXPacketReader() {
 }
 
 UBXPacketUpdateResult UBXPacketReader::update(uint8_t newByte) {
-    if(complete) {
+    if (complete) {
         return UBXPacketUpdateResult::PACKET_ALREADY_COMPLETE;
     }
     inProgress = true;
     int currentPacketIndex = packetIndex;
     packetIndex++;
-    if(currentPacketIndex==0) {
+    if (currentPacketIndex == 0) {
         messageClass = newByte;
-    } else if(currentPacketIndex==1) {
+    } else if (currentPacketIndex == 1) {
         messageId = newByte;
-    } else if(currentPacketIndex==2) {
+    } else if (currentPacketIndex == 2) {
         payloadLength = newByte;
-    } else if(currentPacketIndex==3) {
+    } else if (currentPacketIndex == 3) {
         payloadLength |= (uint16_t)newByte << 8;
-    } else if(currentPacketIndex>=4+payloadLength && currentPacketIndex<6+payloadLength) {
-        if(currentPacketIndex==4+payloadLength) {
-            if(ckA != newByte) {
+    } else if (currentPacketIndex >= 4 + payloadLength && currentPacketIndex < 6 + payloadLength) {
+        if (currentPacketIndex == 4 + payloadLength) {
+            if (ckA != newByte) {
                 return UBXPacketUpdateResult::CHECKSUM_FAILED;
             }
         } else {
-            if(ckB != newByte) {
+            if (ckB != newByte) {
                 return UBXPacketUpdateResult::CHECKSUM_FAILED;
             } else {
                 complete = true;
                 inProgress = false;
             }
         }
-        return UBXPacketUpdateResult::UPDATE_OK; // return early to avoid updating checksums
+        return UBXPacketUpdateResult::UPDATE_OK;  // return early to avoid updating checksums
     } else {
-        payload[currentPacketIndex-4] = newByte;
+        payload[currentPacketIndex - 4] = newByte;
     }
     ckA = ckA + newByte;
     ckB = ckB + ckA;
     return UBXPacketUpdateResult::UPDATE_OK;
 }
 
-void* UBXPacketReader::getPayload() {
-    return (void*)payload;
-}
+void* UBXPacketReader::getPayload() { return (void*)payload; }
 
-uint8_t UBXPacketReader::getPayloadLength() {
-    return payloadLength;
-}
+uint8_t UBXPacketReader::getPayloadLength() { return payloadLength; }
 
-uint8_t UBXPacketReader::getMessageClass() {
-    return messageClass;
-}
+uint8_t UBXPacketReader::getMessageClass() { return messageClass; }
 
-uint8_t UBXPacketReader::getMessageId() {
-    return messageId;
-}
+uint8_t UBXPacketReader::getMessageId() { return messageId; }
 
-bool UBXPacketReader::isComplete() {
-    return complete;
-}
+bool UBXPacketReader::isComplete() { return complete; }
 
-bool UBXPacketReader::isInProgress() {
-    return inProgress;
-}
+bool UBXPacketReader::isInProgress() { return inProgress; }
 
 void UBXPacketReader::reset() {
     payloadLength = 0;
