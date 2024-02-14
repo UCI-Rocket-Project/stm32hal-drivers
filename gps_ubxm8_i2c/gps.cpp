@@ -7,33 +7,33 @@
 
 GPS::GPS() {
     packetReader = UBXPacketReader();
-    state = GPSState::REQUEST_NOT_SENT;
+    state = GPS::State::REQUEST_NOT_SENT;
 }
 
-const GPSState GPS::getState() {
+const GPS::State GPS::getState() {
     return state;
 }
 
-const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
-    if(state == GPSState::REQUEST_NOT_SENT) {
+const GPS::PollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
+    if(state == GPS::State::REQUEST_NOT_SENT) {
         uint8_t message[4] = {0x01, 0x07, 0x00, 0x00};
         sendUBX(message, 4, &hi2c3);
-        state = GPSState::POLLING_RESPONSE;
+        state = GPS::State::POLLING_RESPONSE;
     }
 
-    if(state == GPSState::POLLING_RESPONSE) {
+    if(state == GPS::State::POLLING_RESPONSE) {
         uint8_t lenBytes[2];
         uint16_t dataLen = 0; 
         uint8_t buffer[I2C_BUFFER_SIZE];
 
         HAL_StatusTypeDef dataLenReadStatus = HAL_I2C_Mem_Read(i2c, 0x42 << 1, 0xFD, 1, lenBytes, 2, 100);
         if(dataLenReadStatus != HAL_OK) {
-            return GPSPollResult::DATA_LEN_POLL_FAILED;
+            return GPS::PollResult::DATA_LEN_POLL_FAILED;
         }
 
         dataLen = lenBytes[0] << 8 | lenBytes[1];
         if(dataLen==0) {
-            return GPSPollResult::NO_DATA;
+            return GPS::PollResult::NO_DATA;
         }
 
         if(dataLen > I2C_BUFFER_SIZE) {
@@ -41,7 +41,7 @@ const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
         }
         HAL_StatusTypeDef rcvStatus = HAL_I2C_Master_Receive(i2c, 0x42 << 1, buffer, dataLen, 100);
         if(rcvStatus != HAL_OK) {
-            return GPSPollResult::DATA_RECEIVE_I2C_FAILED;
+            return GPS::PollResult::DATA_RECEIVE_I2C_FAILED;
         }
 
         if(packetReader.isInProgress()) {
@@ -49,11 +49,11 @@ const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
                 UBXPacketUpdateResult res = packetReader.update(buffer[i]);
                 if(res == UBXPacketUpdateResult::CHECKSUM_FAILED) {
                     packetReader.reset();
-                    return GPSPollResult::DATA_RECEIVE_CHECKSUM_FAILED;
+                    return GPS::PollResult::DATA_RECEIVE_CHECKSUM_FAILED;
                 }
                 if(packetReader.isComplete()) {
-                    state = GPSState::RESPONSE_READY;
-                    return GPSPollResult::POLL_OK;
+                    state = GPS::State::RESPONSE_READY;
+                    return GPS::PollResult::POLL_FINISHED;
                 }
             }
         } else {
@@ -64,7 +64,7 @@ const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
                         UBXPacketUpdateResult res = packetReader.update(buffer[i]);
                         if(res != UBXPacketUpdateResult::UPDATE_OK) {
                             packetReader.reset();
-                            return GPSPollResult::DATA_RECEIVE_CHECKSUM_FAILED;
+                            return GPS::PollResult::DATA_RECEIVE_CHECKSUM_FAILED;
                         }
                         i++;
                     }
@@ -72,13 +72,13 @@ const GPSPollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
             }
 
             if(packetReader.isComplete()) {
-                state = GPSState::RESPONSE_READY;
-                return GPSPollResult::POLL_OK;
+                state = GPS::State::RESPONSE_READY;
+                return GPS::PollResult::POLL_FINISHED;
             }
         }
     }
 
-    return GPSPollResult::POLL_OK;
+    return GPS::PollResult::RECEIVE_IN_PROGRESS;
 }
 
 const UBX_NAV_PVT_PAYLOAD GPS::getSolution() {
@@ -86,6 +86,6 @@ const UBX_NAV_PVT_PAYLOAD GPS::getSolution() {
 }
 
 void GPS::reset() {
-    state = GPSState::REQUEST_NOT_SENT;
+    state = GPS::State::REQUEST_NOT_SENT;
     packetReader.reset();
 }
