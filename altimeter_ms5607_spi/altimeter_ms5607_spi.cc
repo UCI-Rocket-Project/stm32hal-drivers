@@ -1,6 +1,6 @@
 #include "altimeter_ms5607_spi.h"
 
-#include <math.h>
+#include <cmath>
 
 AltimeterMs5607Spi::AltimeterMs5607Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *misoPort, uint16_t misoPin, double seaLevelPressure)
     : _hspi(hspi), _csPort(csPort), _csPin(csPin), _misoPort(misoPort), _misoPin(misoPin), _seaLevelPressure(seaLevelPressure) {}
@@ -126,7 +126,7 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate r
 
             data.temperature = t / 100.0;
             data.pressure = (d1 * sens / 2097152 - off) / 32768.0;
-            data.altitude = 44307.7 * (1 - pow(data.pressure / 100.0 / _seaLevelPressure, 0.190284));
+            data.altitude = 44307.7 * (1 - std::pow(data.pressure / 100.0 / _seaLevelPressure, 0.190284));
             break;
         }
 
