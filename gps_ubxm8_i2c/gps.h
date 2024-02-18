@@ -1,6 +1,10 @@
 #pragma once
 
-#include <i2c.h>
+// if this is shitting itself, just locally replace it with whatever
+// header on your machine that can get you `I2C_HandleTypeDef`
+#if defined(STM32F1)
+#include "stm32f1xx_hal.h"
+#endif
 
 #include "ubxMessages.h"
 #include "ubxPacket.h"
