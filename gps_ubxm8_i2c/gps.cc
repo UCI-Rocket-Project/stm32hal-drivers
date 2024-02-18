@@ -4,6 +4,7 @@
 #include "ubxPacket.h"
 
 #define I2C_BUFFER_SIZE 1024
+#define GPS_I2C_TIMEOUT 100
 
 static uint8_t magicBytes[2] = {0xB5, 0x62};
 
@@ -22,7 +23,7 @@ bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c
     uint8_t CK_A{0}, CK_B{0};
 
     HAL_StatusTypeDef status;
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, magicBytes, 2, 100);
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, magicBytes, 2, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }
@@ -33,11 +34,11 @@ bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c
     }
 
     uint8_t CK[2] = {CK_A, CK_B};
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, message, len, 100);
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, message, len, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, CK, 2, 100);
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, CK, 2, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }
@@ -70,7 +71,7 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
         uint16_t dataLen = 0;
         uint8_t buffer[I2C_BUFFER_SIZE];
 
-        HAL_StatusTypeDef dataLenReadStatus = HAL_I2C_Mem_Read(i2c, 0x42 << 1, 0xFD, 1, lenBytes, 2, 100);
+        HAL_StatusTypeDef dataLenReadStatus = HAL_I2C_Mem_Read(i2c, 0x42 << 1, 0xFD, 1, lenBytes, 2, GPS_I2C_TIMEOUT);
         if (dataLenReadStatus != HAL_OK) {
             return GpsUbxM8I2c::PollResult::DATA_LEN_POLL_FAILED;
         }
@@ -83,7 +84,7 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
         if (dataLen > I2C_BUFFER_SIZE) {
             dataLen = I2C_BUFFER_SIZE;
         }
-        HAL_StatusTypeDef rcvStatus = HAL_I2C_Master_Receive(i2c, 0x42 << 1, buffer, dataLen, 100);
+        HAL_StatusTypeDef rcvStatus = HAL_I2C_Master_Receive(i2c, 0x42 << 1, buffer, dataLen, GPS_I2C_TIMEOUT);
         if (rcvStatus != HAL_OK) {
             return GpsUbxM8I2c::PollResult::DATA_RECEIVE_I2C_FAILED;
         }
