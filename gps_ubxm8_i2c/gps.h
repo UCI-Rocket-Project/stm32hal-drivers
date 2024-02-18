@@ -32,7 +32,7 @@
  * The most relevant parts are "UBX Protocol" (section 32) and "DDC Port" (section 15).
  *
  */
-class GPS {
+class GpsUbxM8I2c {
   public:
     enum class State {
         REQUEST_NOT_SENT,
@@ -49,7 +49,7 @@ class GPS {
         DATA_RECEIVE_I2C_FAILED,
         DATA_RECEIVE_CHECKSUM_FAILED
     };
-    GPS();
+    GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin);
     const State GetState();
     const PollResult PollUpdate(I2C_HandleTypeDef* i2c);
     const UBX_NAV_PVT_PAYLOAD GetSolution();
