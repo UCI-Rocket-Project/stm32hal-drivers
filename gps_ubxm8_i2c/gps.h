@@ -14,9 +14,9 @@
  * ```
  *     GPS myGPS;
  *     while(1) {
- *        if(myGPS.pollUpdate(&i2c1) == GPS::PollResult::POLL_FINISHED) {
- *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.getSolution();
- *            myGPS.reset();
+ *        if(myGPS.PollUpdate(&i2c1) == GPS::PollResult::POLL_FINISHED) {
+ *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.GetSolution();
+ *            myGPS.Reset();
  *        }
  *     }
  * ```
@@ -46,10 +46,10 @@ class GPS {
         DATA_RECEIVE_CHECKSUM_FAILED
     };
     GPS();
-    const State getState();
-    const PollResult pollUpdate(I2C_HandleTypeDef* i2c);
-    const UBX_NAV_PVT_PAYLOAD getSolution();
-    void reset();
+    const State GetState();
+    const PollResult PollUpdate(I2C_HandleTypeDef* i2c);
+    const UBX_NAV_PVT_PAYLOAD GetSolution();
+    void Reset();
 
   private:
     UBXPacketReader packetReader;

@@ -11,7 +11,7 @@ GPS::GPS() {
     state = GPS::State::REQUEST_NOT_SENT;
 }
 
-const GPS::State GPS::getState() { return state; }
+const GPS::State GPS::GetState() { return state; }
 
 /**
  * Sends a request for position data if none are currently pending.
@@ -24,7 +24,7 @@ const GPS::State GPS::getState() { return state; }
  *
  * There are also special return types for different types of error, that are hopefully verbose enough to explain themselves.
  */
-const GPS::PollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
+const GPS::PollResult GPS::PollUpdate(I2C_HandleTypeDef* i2c) {
     if (state == GPS::State::REQUEST_NOT_SENT) {
         uint8_t message[4] = {0x01, 0x07, 0x00, 0x00};
         sendUBX(message, 4, &hi2c3);
@@ -105,13 +105,13 @@ const GPS::PollResult GPS::pollUpdate(I2C_HandleTypeDef* i2c) {
  * After calling this and using the info returned, getting the next
  * packet requires you to call `reset` and `pollUpdate` again.
  */
-const UBX_NAV_PVT_PAYLOAD GPS::getSolution() { return *(UBX_NAV_PVT_PAYLOAD*)packetReader.getPayload(); }
+const UBX_NAV_PVT_PAYLOAD GPS::GetSolution() { return *(UBX_NAV_PVT_PAYLOAD*)packetReader.getPayload(); }
 
 /**
  * Puts the GPS state back to its initial value so that `pollUpdate` knows
  * it needs to send a new data request.
  */
-void GPS::reset() {
+void GPS::Reset() {
     state = GPS::State::REQUEST_NOT_SENT;
     packetReader.reset();
 }
