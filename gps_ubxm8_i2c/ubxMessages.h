@@ -1,6 +1,15 @@
 #pragma once
 #include <stdint.h>
 
+enum class GPSFixType : uint8_t {
+    NO_FIX,
+    DEAD_RECKONING,
+    FIX_2D,
+    FIX_3D,
+    GNSS_AND_DEAD_RECKONING,
+    TIME_ONLY_FIX
+};
+
 #pragma pack(push, 1)
 struct UBX_NAV_PVT_PAYLOAD {
     uint32_t iTOW;
@@ -37,12 +46,3 @@ struct UBX_NAV_PVT_PAYLOAD {
     uint16_t magAcc;
 };
 #pragma pack(pop)
-
-enum class GPSFixType : uint8_t {
-    NO_FIX,
-    DEAD_RECKONING,
-    FIX_2D,
-    FIX_3D,
-    GNSS_AND_DEAD_RECKONING,
-    TIME_ONLY_FIX
-};
