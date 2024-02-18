@@ -25,23 +25,26 @@ UBXPacketUpdateResult UBXPacketReader::update(uint8_t newByte) {
         payloadLength = newByte;
     } else if (currentPacketIndex == 3) {
         payloadLength |= (uint16_t)newByte << 8;
-    } else if (currentPacketIndex >= 4 + payloadLength && currentPacketIndex < 6 + payloadLength) {
-        if (currentPacketIndex == 4 + payloadLength) {
-            if (ckA != newByte) {
-                return UBXPacketUpdateResult::CHECKSUM_FAILED;
-            }
+    } else if (currentPacketIndex < 4 + payloadLength) {
+        payload[currentPacketIndex - 4] = newByte;
+    } else if (currentPacketIndex == 4 + payloadLength) {
+        if (ckA != newByte) {
+            return UBXPacketUpdateResult::CHECKSUM_FAILED;
+        }
+        return UBXPacketUpdateResult::UPDATE_OK;  // return early to avoid updating checksums
+    } else if (currentPacketIndex == 5 + payloadLength) {
+        if (ckB != newByte) {
+            return UBXPacketUpdateResult::CHECKSUM_FAILED;
         } else {
-            if (ckB != newByte) {
-                return UBXPacketUpdateResult::CHECKSUM_FAILED;
-            } else {
-                complete = true;
-                inProgress = false;
-            }
+            complete = true;
+            inProgress = false;
         }
         return UBXPacketUpdateResult::UPDATE_OK;  // return early to avoid updating checksums
     } else {
-        payload[currentPacketIndex - 4] = newByte;
+        // should never get here, but return a unique value for debugging just in case
+        return UBXPacketUpdateResult::PACKET_INDEX_OVERFLOW;
     }
+
     ckA = ckA + newByte;
     ckB = ckB + ckA;
     return UBXPacketUpdateResult::UPDATE_OK;

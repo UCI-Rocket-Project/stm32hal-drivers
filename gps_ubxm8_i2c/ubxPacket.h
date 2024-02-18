@@ -5,7 +5,8 @@
 enum class UBXPacketUpdateResult {
     UPDATE_OK,
     CHECKSUM_FAILED,
-    PACKET_ALREADY_COMPLETE
+    PACKET_ALREADY_COMPLETE,
+    PACKET_INDEX_OVERFLOW  // indicates internal error with packet reader
 };
 
 class UBXPacketReader {
