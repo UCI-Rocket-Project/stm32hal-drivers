@@ -2,10 +2,10 @@
 
 // if this is shitting itself, just locally replace it with whatever
 // header on your machine that can get you `I2C_HandleTypeDef`
-#if defined(STM32F1)
-#include "stm32f1xx_hal.h"
-#endif
-
+// #if defined(STM32F1)
+// #include "stm32f1xx_hal.h"
+// #endif
+#include "i2c.h"
 #include "ubxMessages.h"
 #include "ubxPacket.h"
 
@@ -58,4 +58,5 @@ class GpsUbxM8I2c {
   private:
     UBXPacketReader packetReader;
     State state;
+    bool sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c);
 };
