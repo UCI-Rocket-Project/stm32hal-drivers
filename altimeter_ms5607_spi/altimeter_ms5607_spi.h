@@ -22,7 +22,6 @@ class AltimeterMs5607Spi {
     };
 
     enum State {
-        RESET,
         IDLE,
         POLL_D1,
         POLL_D2,
