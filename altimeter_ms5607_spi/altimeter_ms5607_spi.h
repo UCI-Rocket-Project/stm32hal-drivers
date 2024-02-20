@@ -70,7 +70,7 @@ class AltimeterMs5607Spi {
      * @brief Get current data, resets system state to IDLE
      * @retval Current data
      */
-    Data getData();
+    Data GetData();
 
   private:
     SPI_HandleTypeDef *_hspi;
@@ -80,8 +80,8 @@ class AltimeterMs5607Spi {
     uint16_t _misoPin;
     double _seaLevelPressure;
     uint16_t _coefficients[8];  // factory calibration coefficients
-    State state;
-    uint32_t d1;  // raw pressure data
-    uint32_t d2;  // raw temperature data
-    Data data;
+    State _state;
+    uint32_t _d1;  // raw pressure data
+    uint32_t _d2;  // raw temperature data
+    Data _data;
 };

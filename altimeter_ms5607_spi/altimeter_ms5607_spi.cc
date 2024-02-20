@@ -22,7 +22,7 @@ bool AltimeterMs5607Spi::Reset() {
 }
 
 AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
-    state = AltimeterMs5607Spi::State::IDLE;
+    _state = AltimeterMs5607Spi::State::IDLE;
 
     // read factory coefficients
     for (int i = 0; i < 8; i++) {
@@ -30,8 +30,8 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
         // PROM read, opcode 0b1010xxx0
         uint8_t command[1] = {(uint8_t)(0b10100000 | (i << 1))};
-        if (HAL_SPI_Transmit(_hspi, command, 1, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
-        if (HAL_SPI_Receive(_hspi, buffer, 2, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
+        if (HAL_SPI_Transmit(_hspi, command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+        if (HAL_SPI_Receive(_hspi, buffer, 2, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
         _coefficients[i] = ((uint16_t)buffer[0] << 8) | (uint16_t)buffer[1];
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
     }
@@ -47,20 +47,20 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
         }
     }
     crcActual = crcActual >> 12;
-    if (crc != crcActual) state = AltimeterMs5607Spi::State::ERROR;
+    if (crc != crcActual) _state = AltimeterMs5607Spi::State::ERROR;
 
-    return state;
+    return _state;
 }
 
 AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate rate) {
-    switch (state) {
+    switch (_state) {
         case AltimeterMs5607Spi::State::IDLE: {
-            state = AltimeterMs5607Spi::State::POLL_D1;
+            _state = AltimeterMs5607Spi::State::POLL_D1;
 
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D1 pressure, the value of the rate enum is the opcode of the corresponding conversion
             uint8_t command = (uint8_t)rate;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
             break;
         }
 
@@ -68,20 +68,20 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate r
             if (HAL_GPIO_ReadPin(_misoPort, _misoPin) == GPIO_PIN_RESET) break;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
-            state = AltimeterMs5607Spi::State::POLL_D2;
+            _state = AltimeterMs5607Spi::State::POLL_D2;
 
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
-            d1 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
+            _d1 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D2 temperature, the value of the rate enum is the opcode of the corresponding conversion plus 0x10
             uint8_t command = (uint8_t)rate + 0x10;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
             break;
         }
 
@@ -89,17 +89,17 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate r
             if (HAL_GPIO_ReadPin(_misoPort, _misoPin) == GPIO_PIN_RESET) break;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
-            state = AltimeterMs5607Spi::State::COMPLETE;
+            _state = AltimeterMs5607Spi::State::COMPLETE;
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
-            d2 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
+            _d2 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
             // calculate temperature, pressure, and altitude, see datasheet for formulas used
-            int64_t dt = d2 - (int64_t)_coefficients[5] * 256;
+            int64_t dt = _d2 - (int64_t)_coefficients[5] * 256;
             int64_t t = 2000 + dt * (int64_t)_coefficients[6] / 8388608;
             int64_t off = (int64_t)_coefficients[2] * 131072 + ((int64_t)_coefficients[4] * dt) / 64;
             int64_t sens = (int64_t)_coefficients[1] * 65536 + ((int64_t)_coefficients[3] * dt) / 128;
@@ -124,19 +124,19 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate r
             off -= off2;
             sens -= sens2;
 
-            data.temperature = t / 100.0;
-            data.pressure = (d1 * sens / 2097152 - off) / 32768.0;
-            data.altitude = 44307.7 * (1 - std::pow(data.pressure / 100.0 / _seaLevelPressure, 0.190284));
+            _data.temperature = t / 100.0;
+            _data.pressure = (_d1 * sens / 2097152 - off) / 32768.0;
+            _data.altitude = 44307.7 * (1 - std::pow(_data.pressure / 100.0 / _seaLevelPressure, 0.190284));
             break;
         }
 
         default:
             break;
     }
-    return state;
+    return _state;
 }
 
-AltimeterMs5607Spi::Data AltimeterMs5607Spi::getData() {
-    state = State::IDLE;
-    return data;
+AltimeterMs5607Spi::Data AltimeterMs5607Spi::GetData() {
+    _state = State::IDLE;
+    return _data;
 }
