@@ -81,7 +81,7 @@ class AltimeterMs5607Spi {
     double _seaLevelPressure;
     uint16_t _coefficients[8];  // factory calibration coefficients
     State _state;
+    Data _data;
     uint32_t _d1;  // raw pressure data
     uint32_t _d2;  // raw temperature data
-    Data _data;
 };

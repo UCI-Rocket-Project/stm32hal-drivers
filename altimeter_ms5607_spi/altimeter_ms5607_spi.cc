@@ -22,7 +22,7 @@ bool AltimeterMs5607Spi::Reset() {
 }
 
 AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
-    _state = AltimeterMs5607Spi::State::IDLE;
+    _state = IDLE;
 
     // read factory coefficients
     for (int i = 0; i < 8; i++) {
@@ -30,8 +30,8 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
         // PROM read, opcode 0b1010xxx0
         uint8_t command[1] = {(uint8_t)(0b10100000 | (i << 1))};
-        if (HAL_SPI_Transmit(_hspi, command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
-        if (HAL_SPI_Receive(_hspi, buffer, 2, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+        if (HAL_SPI_Transmit(_hspi, command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+        if (HAL_SPI_Receive(_hspi, buffer, 2, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
         _coefficients[i] = ((uint16_t)buffer[0] << 8) | (uint16_t)buffer[1];
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
     }
@@ -47,54 +47,54 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
         }
     }
     crcActual = crcActual >> 12;
-    if (crc != crcActual) _state = AltimeterMs5607Spi::State::ERROR;
+    if (crc != crcActual) _state = ERROR;
 
     return _state;
 }
 
-AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate rate) {
+AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(Rate rate) {
     switch (_state) {
-        case AltimeterMs5607Spi::State::IDLE: {
-            _state = AltimeterMs5607Spi::State::POLL_D1;
+        case IDLE: {
+            _state = POLL_D1;
 
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D1 pressure, the value of the rate enum is the opcode of the corresponding conversion
             uint8_t command = (uint8_t)rate;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
             break;
         }
 
-        case AltimeterMs5607Spi::State::POLL_D1: {
+        case POLL_D1: {
             if (HAL_GPIO_ReadPin(_misoPort, _misoPin) == GPIO_PIN_RESET) break;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
-            _state = AltimeterMs5607Spi::State::POLL_D2;
+            _state = POLL_D2;
 
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
             _d1 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D2 temperature, the value of the rate enum is the opcode of the corresponding conversion plus 0x10
             uint8_t command = (uint8_t)rate + 0x10;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
             break;
         }
 
-        case AltimeterMs5607Spi::State::POLL_D2: {
+        case POLL_D2: {
             if (HAL_GPIO_ReadPin(_misoPort, _misoPin) == GPIO_PIN_RESET) break;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
-            _state = AltimeterMs5607Spi::State::COMPLETE;
+            _state = COMPLETE;
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = AltimeterMs5607Spi::State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
             _d2 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
@@ -137,6 +137,6 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(AltimeterMs5607Spi::Rate r
 }
 
 AltimeterMs5607Spi::Data AltimeterMs5607Spi::GetData() {
-    _state = State::IDLE;
+    _state = IDLE;
     return _data;
 }
