@@ -59,7 +59,7 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
     return _state;
 }
 
-AltimeterMs5607Spi::State AltimeterMs5607Spi::Convert(Rate rate) {
+AltimeterMs5607Spi::State AltimeterMs5607Spi::Read(Rate rate) {
     switch (_state) {
         case IDLE: {
             _state = POLL_D1;

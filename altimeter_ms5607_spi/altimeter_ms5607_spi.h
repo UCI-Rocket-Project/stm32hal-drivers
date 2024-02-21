@@ -64,7 +64,7 @@ class AltimeterMs5607Spi {
      * @brief Reads pressure and temperature data from the altimeter and calculates altitude
      * @retval Current state
      */
-    State Convert(Rate rate);
+    State Read(Rate rate);
 
     /**
      * @brief Get current data, resets system state to IDLE
