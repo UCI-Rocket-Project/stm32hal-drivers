@@ -17,6 +17,7 @@
  * An example usage is as follows:
  * ```
  *     GPS myGPS;
+ *     myGPS.Init();
  *     while(1) {
  *        if(myGPS.PollUpdate(&i2c1) == GPS::PollResult::POLL_FINISHED) {
  *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.GetSolution();
@@ -44,7 +45,7 @@ class GpsUbxM8I2c {
         POLL_ALREADY_FINISHED,        // the ubx data was already ready after a previous PollUpdate call
         RECEIVE_IN_PROGRESS,          // we found the UBX start bytes in the incoming stream but haven't read the entire message
         NO_DATA,                      // no data from GPS available
-        NO_UBX_DATA,                  // data read successfulyl but no UBX start bytes found
+        NO_UBX_DATA,                  // data read successfully but no UBX start bytes found
         DATA_LEN_POLL_FAILED,         // there was a failure in the I2C mem read for getting the quantity of data available
         DATA_RECEIVE_I2C_FAILED,      // there was a failure in the I2C receive to read the available data from the GPS
         DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
