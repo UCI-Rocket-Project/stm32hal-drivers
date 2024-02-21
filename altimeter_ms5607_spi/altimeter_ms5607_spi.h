@@ -17,7 +17,7 @@ class AltimeterMs5607Spi {
         double altitude;
     };
 
-    enum State {
+    enum class State {
         IDLE,
         POLL_D1,
         POLL_D2,
