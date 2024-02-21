@@ -6,45 +6,6 @@
 #define I2C_BUFFER_SIZE 1024
 #define GPS_I2C_TIMEOUT 100
 
-static uint8_t magicBytes[2] = {0xB5, 0x62};
-
-/**
- * @brief Sends a UBX protocol message over i2c
- *
- * @param message Array containing
- *                {messageClass, messageID, payloadLenHighBits, payloadLenLowBits},
- *                and if the payload length >0, all the payload bytes. Note: you don't need to
- *                include the UBX start sequence in this or the checksums.
- *
- * @param len Length of `message`
- * @param i2c The HAL i2c handle to use for transmission.
- */
-bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c) {
-    uint8_t CK_A{0}, CK_B{0};
-
-    HAL_StatusTypeDef status;
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, magicBytes, 2, GPS_I2C_TIMEOUT);
-    if (status != HAL_OK) {
-        return false;
-    }
-
-    for (uint16_t i = 0; i < len; i++) {
-        CK_A = CK_A + message[i];
-        CK_B = CK_B + CK_A;
-    }
-
-    uint8_t CK[2] = {CK_A, CK_B};
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, message, len, GPS_I2C_TIMEOUT);
-    if (status != HAL_OK) {
-        return false;
-    }
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, CK, 2, GPS_I2C_TIMEOUT);
-    if (status != HAL_OK) {
-        return false;
-    }
-    return true;
-}
-
 GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
     HAL_GPIO_WritePin(gpioResetPort, gpioResetPin, GPIO_PIN_SET);
     packetReader = UBXPacketReader();
@@ -151,4 +112,43 @@ const UBX_NAV_PVT_PAYLOAD GpsUbxM8I2c::GetSolution() { return *(UBX_NAV_PVT_PAYL
 void GpsUbxM8I2c::Reset() {
     state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
     packetReader.reset();
+}
+
+
+/**
+ * @brief Sends a UBX protocol message over i2c
+ *
+ * @param message Array containing
+ *                {messageClass, messageID, payloadLenHighBits, payloadLenLowBits},
+ *                and if the payload length >0, all the payload bytes. Note: you don't need to
+ *                include the UBX start sequence in this or the checksums.
+ *
+ * @param len Length of `message`
+ * @param i2c The HAL i2c handle to use for transmission.
+ */
+bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c) {
+    static uint8_t magicBytes[2] = {0xB5, 0x62};
+    uint8_t CK_A{0}, CK_B{0};
+
+    HAL_StatusTypeDef status;
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, magicBytes, 2, GPS_I2C_TIMEOUT);
+    if (status != HAL_OK) {
+        return false;
+    }
+
+    for (uint16_t i = 0; i < len; i++) {
+        CK_A = CK_A + message[i];
+        CK_B = CK_B + CK_A;
+    }
+
+    uint8_t CK[2] = {CK_A, CK_B};
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, message, len, GPS_I2C_TIMEOUT);
+    if (status != HAL_OK) {
+        return false;
+    }
+    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, CK, 2, GPS_I2C_TIMEOUT);
+    if (status != HAL_OK) {
+        return false;
+    }
+    return true;
 }
