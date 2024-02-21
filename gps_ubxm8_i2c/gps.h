@@ -45,13 +45,13 @@ class GpsUbxM8I2c {
         RESPONSE_READY
     };
     enum class PollResult {
-        POLL_JUST_FINISHED,     // the ubx data has been received on this invocation, and is now ready to be retrieved
-        POLL_ALREADY_FINISHED,  // the ubx data was already ready after a previous PollUpdate call
-        RECEIVE_IN_PROGRESS,  // we found the UBX start bytes in the incoming stream but haven't read the entire message
-        NO_DATA,              // no data from GPS available
-        NO_UBX_DATA,          // data read successfully but no UBX start bytes found
-        DATA_LEN_POLL_FAILED,     // there was a failure in the I2C mem read for getting the quantity of data available
-        DATA_RECEIVE_I2C_FAILED,  // there was a failure in the I2C receive to read the available data from the GPS
+        POLL_JUST_FINISHED,           // the ubx data has been received on this invocation, and is now ready to be retrieved
+        POLL_ALREADY_FINISHED,        // the ubx data was already ready after a previous PollUpdate call
+        RECEIVE_IN_PROGRESS,          // we found the UBX start bytes in the incoming stream but haven't read the entire message
+        NO_DATA,                      // no data from GPS available
+        NO_UBX_DATA,                  // data read successfully but no UBX start bytes found
+        DATA_LEN_POLL_FAILED,         // there was a failure in the I2C mem read for getting the quantity of data available
+        DATA_RECEIVE_I2C_FAILED,      // there was a failure in the I2C receive to read the available data from the GPS
         DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
     };
     GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin);
@@ -65,6 +65,6 @@ class GpsUbxM8I2c {
     UBXPacketReader _packetReader;
     State _state;
     GPIO_TypeDef* _gpioResetPort;
-    uint16_t _gpioResetPin
+    uint16_t _gpioResetPin;
     bool sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c);
 };
