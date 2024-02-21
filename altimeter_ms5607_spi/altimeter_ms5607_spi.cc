@@ -11,10 +11,17 @@ bool AltimeterMs5607Spi::Reset() {
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
     // reset, opcode 0x1E
     if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x1E}, 1, SERIAL_TIMEOUT) != HAL_OK) opStatus = false;
-    // poll for reset complete (approx 2.8ms)
+    // poll for reset complete (approx 2.8 ms)
+    uint32_t startTime = HAL_GetTick();
     GPIO_PinState readStatus = GPIO_PIN_RESET;
     while (readStatus == GPIO_PIN_RESET) {
         readStatus = HAL_GPIO_ReadPin(_misoPort, _misoPin);
+
+        // 5 ms timeout
+        if (HAL_GetTick() - startTime >= 5) {
+            opStatus = false;
+            break;
+        }
     }
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
