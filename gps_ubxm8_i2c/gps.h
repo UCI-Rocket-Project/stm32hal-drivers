@@ -61,5 +61,7 @@ class GpsUbxM8I2c {
   private:
     UBXPacketReader _packetReader;
     State _state;
+    GPIO_TypeDef* _gpioResetPort;
+    uint16_t _gpioResetPin
     bool sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c);
 };

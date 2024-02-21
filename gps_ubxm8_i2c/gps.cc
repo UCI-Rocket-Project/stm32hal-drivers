@@ -9,10 +9,12 @@
 GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
     _packetReader = UBXPacketReader();
     _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
+    _gpioResetPin = gpioResetPin;
+    _gpioResetPort = gpioResetPort; 
 }
 
 GpsUbxM8I2c::Init() {
-    HAL_GPIO_WritePin(gpioResetPort, gpioResetPin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(_gpioResetPort, _gpioResetPin, GPIO_PIN_SET);
 }
 
 const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
