@@ -6,10 +6,6 @@
 #include "stm32f4xx_hal.h"
 #endif
 
-#ifndef SERIAL_TIMEOUT
-#define SERIAL_TIMEOUT 10
-#endif
-
 class AltimeterMs5607Spi {
   public:
     struct Data {
@@ -45,8 +41,9 @@ class AltimeterMs5607Spi {
      * @param misoPort MISO GPIO port
      * @param misoPin MISO GPIO pin
      * @param seaLevelPressure sea level pressure in hPa
+     * @param timeout serial communication timeout in ms
      */
-    AltimeterMs5607Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *misoPort, uint16_t misoPin, double seaLevelPressure);
+    AltimeterMs5607Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *misoPort, uint16_t misoPin, double seaLevelPressure, int timeout);
 
     /**
      * @brief Resets altimeter
@@ -84,4 +81,5 @@ class AltimeterMs5607Spi {
     Data _data;
     uint32_t _d1;  // raw pressure data
     uint32_t _d2;  // raw temperature data
+    int _timeout;
 };

@@ -2,15 +2,15 @@
 
 #include <cmath>
 
-AltimeterMs5607Spi::AltimeterMs5607Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *misoPort, uint16_t misoPin, double seaLevelPressure)
-    : _hspi(hspi), _csPort(csPort), _csPin(csPin), _misoPort(misoPort), _misoPin(misoPin), _seaLevelPressure(seaLevelPressure) {}
+AltimeterMs5607Spi::AltimeterMs5607Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *misoPort, uint16_t misoPin, double seaLevelPressure, int timeout = 10)
+    : _hspi(hspi), _csPort(csPort), _csPin(csPin), _misoPort(misoPort), _misoPin(misoPin), _seaLevelPressure(seaLevelPressure), _timeout(timeout) {}
 
 bool AltimeterMs5607Spi::Reset() {
     bool opStatus = true;
 
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
     // reset, opcode 0x1E
-    if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x1E}, 1, SERIAL_TIMEOUT) != HAL_OK) opStatus = false;
+    if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x1E}, 1, _timeout) != HAL_OK) opStatus = false;
     // poll for reset complete (approx 2.8 ms)
     uint32_t startTime = HAL_GetTick();
     GPIO_PinState readStatus = GPIO_PIN_RESET;
@@ -37,8 +37,8 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Init() {
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
         // PROM read, opcode 0b1010xxx0
         uint8_t command[1] = {(uint8_t)(0b10100000 | (i << 1))};
-        if (HAL_SPI_Transmit(_hspi, command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
-        if (HAL_SPI_Receive(_hspi, buffer, 2, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+        if (HAL_SPI_Transmit(_hspi, command, 1, _timeout) != HAL_OK) _state = ERROR;
+        if (HAL_SPI_Receive(_hspi, buffer, 2, _timeout) != HAL_OK) _state = ERROR;
         _coefficients[i] = ((uint16_t)buffer[0] << 8) | (uint16_t)buffer[1];
         HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
     }
@@ -67,7 +67,7 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Read(Rate rate) {
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D1 pressure, the value of the rate enum is the opcode of the corresponding conversion
             uint8_t command = (uint8_t)rate;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, _timeout) != HAL_OK) _state = ERROR;
             break;
         }
 
@@ -80,15 +80,15 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Read(Rate rate) {
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, _timeout) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, _timeout) != HAL_OK) _state = ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
             _d1 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // convert D2 temperature, the value of the rate enum is the opcode of the corresponding conversion plus 0x10
             uint8_t command = (uint8_t)rate + 0x10;
-            if (HAL_SPI_Transmit(_hspi, &command, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Transmit(_hspi, &command, 1, _timeout) != HAL_OK) _state = ERROR;
             break;
         }
 
@@ -100,8 +100,8 @@ AltimeterMs5607Spi::State AltimeterMs5607Spi::Read(Rate rate) {
             uint8_t buffer[3];
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
             // read data, opcode 0x00
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
-            if (HAL_SPI_Receive(_hspi, buffer, 3, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, _timeout) != HAL_OK) _state = ERROR;
+            if (HAL_SPI_Receive(_hspi, buffer, 3, _timeout) != HAL_OK) _state = ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
             _d2 = ((uint32_t)buffer[0] << 16) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2]);
 
