@@ -29,7 +29,8 @@
  * After a packet is received, you _need_ to call the reset method.
  * If you don't, `pollUpdate` will just do nothing and return a `POLL_ALREADY_FINISHED` response.
  *
- * The datasheet is here: https://content.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+ * The datasheet is here:
+ * https://content.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
  * The most relevant parts are "UBX Protocol" (section 32) and "DDC Port" (section 15).
  *
  */
@@ -41,13 +42,13 @@ class GpsUbxM8I2c {
         RESPONSE_READY
     };
     enum class PollResult {
-        POLL_JUST_FINISHED,           // the ubx data has been received on this invocation, and is now ready to be retrieved
-        POLL_ALREADY_FINISHED,        // the ubx data was already ready after a previous PollUpdate call
-        RECEIVE_IN_PROGRESS,          // we found the UBX start bytes in the incoming stream but haven't read the entire message
-        NO_DATA,                      // no data from GPS available
-        NO_UBX_DATA,                  // data read successfully but no UBX start bytes found
-        DATA_LEN_POLL_FAILED,         // there was a failure in the I2C mem read for getting the quantity of data available
-        DATA_RECEIVE_I2C_FAILED,      // there was a failure in the I2C receive to read the available data from the GPS
+        POLL_JUST_FINISHED,     // the ubx data has been received on this invocation, and is now ready to be retrieved
+        POLL_ALREADY_FINISHED,  // the ubx data was already ready after a previous PollUpdate call
+        RECEIVE_IN_PROGRESS,  // we found the UBX start bytes in the incoming stream but haven't read the entire message
+        NO_DATA,              // no data from GPS available
+        NO_UBX_DATA,          // data read successfully but no UBX start bytes found
+        DATA_LEN_POLL_FAILED,     // there was a failure in the I2C mem read for getting the quantity of data available
+        DATA_RECEIVE_I2C_FAILED,  // there was a failure in the I2C receive to read the available data from the GPS
         DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
     };
     GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin);

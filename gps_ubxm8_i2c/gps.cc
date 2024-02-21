@@ -117,7 +117,6 @@ void GpsUbxM8I2c::Reset() {
     packetReader.reset();
 }
 
-
 /**
  * @brief Sends a UBX protocol message over i2c
  *
