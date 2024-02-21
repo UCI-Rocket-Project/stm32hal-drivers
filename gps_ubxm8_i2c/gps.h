@@ -59,7 +59,7 @@ class GpsUbxM8I2c {
     void Reset();
 
   private:
-    UBXPacketReader packetReader;
-    State state;
+    UBXPacketReader _packetReader;
+    State _state;
     bool sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c);
 };

@@ -7,15 +7,15 @@
 #define GPS_I2C_TIMEOUT 100
 
 GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
-    packetReader = UBXPacketReader();
-    state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
+    _packetReader = UBXPacketReader();
+    _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
 }
 
-GpsUbxM8I2c::Init(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
+GpsUbxM8I2c::Init() {
     HAL_GPIO_WritePin(gpioResetPort, gpioResetPin, GPIO_PIN_SET);
 }
 
-const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return state; }
+const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
 
 /**
  * @brief Sends a request for position data if none are currently pending, checks data available,
@@ -24,13 +24,13 @@ const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return state; }
  * @return a GpsUbxM8I2c::PollResult object. See the definition of that enum for details.
  */
 const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
-    if (state == GpsUbxM8I2c::State::REQUEST_NOT_SENT) {
+    if (_state == GpsUbxM8I2c::State::REQUEST_NOT_SENT) {
         uint8_t message[4] = {0x01, 0x07, 0x00, 0x00};
         sendUBX(message, 4, &hi2c3);
-        state = GpsUbxM8I2c::State::POLLING_RESPONSE;
+        _state = GpsUbxM8I2c::State::POLLING_RESPONSE;
     }
 
-    if (state == GpsUbxM8I2c::State::POLLING_RESPONSE) {
+    if (_state == GpsUbxM8I2c::State::POLLING_RESPONSE) {
         uint8_t lenBytes[2];
         uint16_t dataLen = 0;
         uint8_t buffer[I2C_BUFFER_SIZE];
@@ -53,15 +53,15 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
             return GpsUbxM8I2c::PollResult::DATA_RECEIVE_I2C_FAILED;
         }
 
-        if (packetReader.isInProgress()) {
+        if (_packetReader.isInProgress()) {
             for (uint16_t i = 0; i < dataLen; i++) {
-                UBXPacketUpdateResult res = packetReader.update(buffer[i]);
+                UBXPacketUpdateResult res = _packetReader.update(buffer[i]);
                 if (res == UBXPacketUpdateResult::CHECKSUM_FAILED) {
-                    packetReader.reset();
+                    _packetReader.reset();
                     return GpsUbxM8I2c::PollResult::DATA_RECEIVE_CHECKSUM_FAILED;
                 }
-                if (packetReader.isComplete()) {
-                    state = GpsUbxM8I2c::State::RESPONSE_READY;
+                if (_packetReader.isComplete()) {
+                    _state = GpsUbxM8I2c::State::RESPONSE_READY;
                     return GpsUbxM8I2c::PollResult::POLL_JUST_FINISHED;
                 }
             }
@@ -70,10 +70,10 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
             for (uint16_t i = 0; i < dataLen; i++) {
                 if (buffer[i] == 0xB5 && buffer[i + 1] == 0x62) {
                     i += 2;  // skip the header
-                    while (i < dataLen && !packetReader.isComplete()) {
-                        UBXPacketUpdateResult res = packetReader.update(buffer[i]);
+                    while (i < dataLen && !_packetReader.isComplete()) {
+                        UBXPacketUpdateResult res = _packetReader.update(buffer[i]);
                         if (res != UBXPacketUpdateResult::UPDATE_OK) {
-                            packetReader.reset();
+                            _packetReader.reset();
                             return GpsUbxM8I2c::PollResult::DATA_RECEIVE_CHECKSUM_FAILED;
                         }
                         i++;
@@ -81,12 +81,12 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
                 }
             }
 
-            if (!packetReader.isInProgress()) {
+            if (!_packetReader.isInProgress()) {
                 return GpsUbxM8I2c::PollResult::NO_UBX_DATA;
             }
 
-            if (packetReader.isComplete()) {
-                state = GpsUbxM8I2c::State::RESPONSE_READY;
+            if (_packetReader.isComplete()) {
+                _state = GpsUbxM8I2c::State::RESPONSE_READY;
                 return GpsUbxM8I2c::PollResult::POLL_JUST_FINISHED;
             }
             return GpsUbxM8I2c::PollResult::RECEIVE_IN_PROGRESS;
@@ -106,15 +106,15 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
  *
  * @retval UBX_NAV_PVT_PAYLOAD struct
  */
-const UBX_NAV_PVT_PAYLOAD GpsUbxM8I2c::GetSolution() { return *(UBX_NAV_PVT_PAYLOAD*)packetReader.getPayload(); }
+const UBX_NAV_PVT_PAYLOAD GpsUbxM8I2c::GetSolution() { return *(UBX_NAV_PVT_PAYLOAD*)_packetReader.getPayload(); }
 
 /**
  * @brief Puts the GPS state back to its initial value so that `pollUpdate` knows
  * it needs to send a new data request.
  */
 void GpsUbxM8I2c::Reset() {
-    state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
-    packetReader.reset();
+    _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
+    _packetReader.reset();
 }
 
 /**
