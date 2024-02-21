@@ -7,9 +7,12 @@
 #define GPS_I2C_TIMEOUT 100
 
 GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
-    HAL_GPIO_WritePin(gpioResetPort, gpioResetPin, GPIO_PIN_SET);
     packetReader = UBXPacketReader();
     state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
+}
+
+GpsUbxM8I2c::Init(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
+    HAL_GPIO_WritePin(gpioResetPort, gpioResetPin, GPIO_PIN_SET);
 }
 
 const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return state; }

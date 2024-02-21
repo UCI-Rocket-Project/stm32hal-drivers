@@ -50,6 +50,7 @@ class GpsUbxM8I2c {
         DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
     };
     GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin);
+    void Init();
     const State GetState();
     const PollResult PollUpdate(I2C_HandleTypeDef* i2c);
     const UBX_NAV_PVT_PAYLOAD GetSolution();
