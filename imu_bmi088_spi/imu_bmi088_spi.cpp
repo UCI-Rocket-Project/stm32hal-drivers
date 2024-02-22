@@ -16,6 +16,9 @@ ImuBmi088Spi::ImuBmi088Spi(SPI_HandleTypeDef *hspi,
 // Accelerometer instruction has a 2nd dummy byte after instruction for reads
 // Any array in UPPER_SNAKE_CASE functions as a constant variable
 
+
+
+
 int ImuBmi088Spi::Reset()
 {
     // setting the chip select pins high
