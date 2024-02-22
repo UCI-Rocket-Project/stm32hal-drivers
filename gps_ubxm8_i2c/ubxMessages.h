@@ -46,3 +46,25 @@ struct UBX_NAV_PVT_PAYLOAD {
     uint16_t magAcc;
 };
 #pragma pack(pop)
+
+#pragma pack(push, 1)
+struct UBX_NAV_SOL_PAYLOAD { // 0x01 0x06
+    uint32_t iTOW;
+    int32_t fTOW;
+    int16_t week;
+    GPSFixType gpsFix;
+    uint8_t flags;
+    int32_t ecefX;
+    int32_t ecefY;
+    int32_t ecefZ;
+    uint32_t pAcc;
+    int32_t ecefVX;
+    int32_t ecefVY;
+    int32_t ecefVZ;
+    uint32_t sAcc;
+    uint16_t pDOP;
+    uint8_t reserved1;
+    uint8_t numSV;
+    uint8_t reserved2[4];
+};
+#pragma pack(pop)
