@@ -6,11 +6,13 @@
 #define I2C_BUFFER_SIZE 1024
 #define GPS_I2C_TIMEOUT 100
 
-GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin) {
+GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin, I2C_HandleTypeDef* i2c, uint8_t* ubxMessage) {
     _packetReader = UBXPacketReader();
     _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
     _gpioResetPin = gpioResetPin;
     _gpioResetPort = gpioResetPort;
+    _i2c = i2c;
+    _ubxMessage = ubxMessage;
 }
 
 GpsUbxM8I2c::Init() { HAL_GPIO_WritePin(_gpioResetPort, _gpioResetPin, GPIO_PIN_SET); }
@@ -23,10 +25,9 @@ const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
  *
  * @return a GpsUbxM8I2c::PollResult object. See the definition of that enum for details.
  */
-const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
+const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate() {
     if (_state == GpsUbxM8I2c::State::REQUEST_NOT_SENT) {
-        uint8_t message[4] = {0x01, 0x07, 0x00, 0x00};
-        sendUBX(message, 4, &hi2c3);
+        sendUBX(_ubxMessage, 4);
         _state = GpsUbxM8I2c::State::POLLING_RESPONSE;
     }
 
@@ -35,7 +36,7 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
         uint16_t dataLen = 0;
         uint8_t buffer[I2C_BUFFER_SIZE];
 
-        HAL_StatusTypeDef dataLenReadStatus = HAL_I2C_Mem_Read(i2c, 0x42 << 1, 0xFD, 1, lenBytes, 2, GPS_I2C_TIMEOUT);
+        HAL_StatusTypeDef dataLenReadStatus = HAL_I2C_Mem_Read(_i2c, 0x42 << 1, 0xFD, 1, lenBytes, 2, GPS_I2C_TIMEOUT);
         if (dataLenReadStatus != HAL_OK) {
             return GpsUbxM8I2c::PollResult::DATA_LEN_POLL_FAILED;
         }
@@ -48,7 +49,7 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
         if (dataLen > I2C_BUFFER_SIZE) {
             dataLen = I2C_BUFFER_SIZE;
         }
-        HAL_StatusTypeDef rcvStatus = HAL_I2C_Master_Receive(i2c, 0x42 << 1, buffer, dataLen, GPS_I2C_TIMEOUT);
+        HAL_StatusTypeDef rcvStatus = HAL_I2C_Master_Receive(_i2c, 0x42 << 1, buffer, dataLen, GPS_I2C_TIMEOUT);
         if (rcvStatus != HAL_OK) {
             return GpsUbxM8I2c::PollResult::DATA_RECEIVE_I2C_FAILED;
         }
@@ -104,9 +105,9 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate(I2C_HandleTypeDef* i2c) {
  * After calling this and using the info returned, getting the next
  * packet requires you to call `reset` and `pollUpdate` again.
  *
- * @retval UBX_NAV_PVT_PAYLOAD struct
+ * @retval pointer to payload. Can be casted to a struct in ubxMessages.
  */
-const UBX_NAV_PVT_PAYLOAD GpsUbxM8I2c::GetSolution() { return *(UBX_NAV_PVT_PAYLOAD*)_packetReader.getPayload(); }
+const void* GpsUbxM8I2c::GetSolution() { return _packetReader.getPayload(); }
 
 /**
  * @brief Puts the GPS state back to its initial value so that `pollUpdate` knows
@@ -128,12 +129,14 @@ void GpsUbxM8I2c::Reset() {
  * @param len Length of `message`
  * @param i2c The HAL i2c handle to use for transmission.
  */
-bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c) {
+bool GpsUbxM8I2c::sendUBX(uint8_t* message) {
     static uint8_t magicBytes[2] = {0xB5, 0x62};
+    uint16_t len = 4+(uint16_t)message[2]<<8 + message[3];
+
     uint8_t CK_A{0}, CK_B{0};
 
     HAL_StatusTypeDef status;
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, magicBytes, 2, GPS_I2C_TIMEOUT);
+    status = HAL_I2C_Master_Transmit(_i2c, 0x42 << 1, magicBytes, 2, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }
@@ -144,11 +147,11 @@ bool GpsUbxM8I2c::sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c
     }
 
     uint8_t CK[2] = {CK_A, CK_B};
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, message, len, GPS_I2C_TIMEOUT);
+    status = HAL_I2C_Master_Transmit(_i2c, 0x42 << 1, message, len, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }
-    status = HAL_I2C_Master_Transmit(i2c, 0x42 << 1, CK, 2, GPS_I2C_TIMEOUT);
+    status = HAL_I2C_Master_Transmit(_i2c, 0x42 << 1, CK, 2, GPS_I2C_TIMEOUT);
     if (status != HAL_OK) {
         return false;
     }

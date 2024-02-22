@@ -10,6 +10,8 @@ enum class GPSFixType : uint8_t {
     TIME_ONLY_FIX
 };
 
+const static uint8_t PVT_MESSAGE[4] = {0x01, 0x07, 0x00, 0x00};
+
 #pragma pack(push, 1)
 struct UBX_NAV_PVT_PAYLOAD {
     uint32_t iTOW;
@@ -46,6 +48,8 @@ struct UBX_NAV_PVT_PAYLOAD {
     uint16_t magAcc;
 };
 #pragma pack(pop)
+
+const static uint8_t SOL_MESSAGE[4] = {0x01, 0x06, 0x00, 0x00};
 
 #pragma pack(push, 1)
 struct UBX_NAV_SOL_PAYLOAD { // 0x01 0x06

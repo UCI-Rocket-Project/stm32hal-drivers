@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifndef PACKET_READER_PAYLOAD_SIZE
+#define PACKET_READER_PAYLOAD_SIZE 512
+#endif
+
 enum class UBXPacketUpdateResult {
     UPDATE_OK,
     CHECKSUM_FAILED,
@@ -9,6 +13,10 @@ enum class UBXPacketUpdateResult {
     PACKET_INDEX_OVERFLOW  // indicates internal error with packet reader
 };
 
+/**
+ * reads a ubx payload byte-by-byte into an internal buffer. The size of this is configurable with
+ * the macro PACKET_READER_PAYLOAD_SIZE
+*/
 class UBXPacketReader {
   public:
     UBXPacketReader();
@@ -22,7 +30,7 @@ class UBXPacketReader {
     void reset();
 
   private:
-    uint8_t payload[512];
+    uint8_t payload[PACKET_READER_PAYLOAD_SIZE];
     uint8_t payloadLength;
     uint8_t packetIndex;
     uint8_t messageClass;

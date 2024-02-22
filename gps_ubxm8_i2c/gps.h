@@ -19,10 +19,10 @@
  * This class keeps its own finite state machine for abstracting away polling data availability and retrying requests.
  * An example usage is as follows:
  * ```
- *     GPS myGPS;
+ *     GPS myGPS(GPS_RESET_PORT, GPS_RESET_PIN, &hi2c3, PVT_MESSAGE);
  *     myGPS.Init();
  *     while(1) {
- *        if(myGPS.PollUpdate(&i2c1) == GPS::PollResult::POLL_FINISHED) {
+ *        if(myGPS.PollUpdate() == GPS::PollResult::POLL_FINISHED) {
  *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.GetSolution();
  *            myGPS.Reset();
  *        }
@@ -58,7 +58,7 @@ class GpsUbxM8I2c {
     void Init();
     const State GetState();
     const PollResult PollUpdate(I2C_HandleTypeDef* i2c);
-    const UBX_NAV_PVT_PAYLOAD GetSolution();
+    const void* GetSolution();
     void Reset();
 
   private:
@@ -66,5 +66,7 @@ class GpsUbxM8I2c {
     State _state;
     GPIO_TypeDef* _gpioResetPort;
     uint16_t _gpioResetPin;
-    bool sendUBX(uint8_t* message, uint16_t len, I2C_HandleTypeDef* i2c);
+    I2C_HandleTypeDef* _i2c;
+    uint8_t* _ubxMessage;
+    bool sendUBX(uint8_t* message);
 };
