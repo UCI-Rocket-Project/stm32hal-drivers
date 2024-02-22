@@ -13,11 +13,9 @@
 /* Datasheet */
 /* https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi088-ds001.pdf */
 
-class ImuBmi088Spi
-{
+class ImuBmi088Spi {
   public:
-    struct Data
-    {
+    struct Data {
         // Angular velocity counterclockwise along x-axis, launch vehicle frame
         // Units 6.1*10^-2 degree/s
         int16_t angularVelocityX = 0xFFFF;
@@ -51,9 +49,7 @@ class ImuBmi088Spi
      * @param gyroCsPin   chip select pin  gyroscope
      */
 
-    ImuBmi088Spi(SPI_HandleTypeDef *hspi,
-                 GPIO_TypeDef *accCsPort, uint16_t accCsPin,
-                 GPIO_TypeDef *gyroCsPort, uint16_t gyroCsPin);
+    ImuBmi088Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *accCsPort, uint16_t accCsPin, GPIO_TypeDef *gyroCsPort, uint16_t gyroCsPin);
 
     /**
      * @brief Resets the IMU

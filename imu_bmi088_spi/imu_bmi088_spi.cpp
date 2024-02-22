@@ -1,26 +1,20 @@
 #include "imu_bmi088_spi.h"
 
-ImuBmi088Spi::ImuBmi088Spi(SPI_HandleTypeDef *hspi,
-                           GPIO_TypeDef *accCsPort, uint16_t accCsPin,
-                           GPIO_TypeDef *gyroCsPort, uint16_t gyroCsPin)
+ImuBmi088Spi::ImuBmi088Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *accCsPort, uint16_t accCsPin, GPIO_TypeDef *gyroCsPort, uint16_t gyroCsPin)
     :
 
       _hspi(hspi),
-      _accCsPort(accCsPort), _accCsPin(accCsPin),
-      _gyroCsPort(gyroCsPort), _gyroCsPin(gyroCsPin)
-{
-}
+      _accCsPort(accCsPort),
+      _accCsPin(accCsPin),
+      _gyroCsPort(gyroCsPort),
+      _gyroCsPin(gyroCsPin) {}
 
 /* Notes */
 // | 0x00 is for write, | 0x80 is for read
 // Accelerometer instruction has a 2nd dummy byte after instruction for reads
 // Any array in UPPER_SNAKE_CASE functions as a constant variable
 
-
-
-
-int ImuBmi088Spi::Reset()
-{
+int ImuBmi088Spi::Reset() {
     // setting the chip select pins high
     HAL_GPIO_WritePin(_accCsPort, _accCsPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(_gyroCsPort, _gyroCsPin, GPIO_PIN_SET);
@@ -46,8 +40,7 @@ int ImuBmi088Spi::Reset()
     return 0;
 }
 
-int ImuBmi088Spi::Init()
-{
+int ImuBmi088Spi::Init() {
     // setting the chip select pins high
     HAL_GPIO_WritePin(_accCsPort, _accCsPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(_gyroCsPort, _gyroCsPin, GPIO_PIN_SET);
@@ -118,8 +111,7 @@ int ImuBmi088Spi::Init()
     return 0;
 }
 
-ImuBmi088Spi::Data ImuBmi088Spi::Read()
-{
+ImuBmi088Spi::Data ImuBmi088Spi::Read() {
     ImuBmi088Spi::Data data;
 
     /* Accelerometer data registers read */
