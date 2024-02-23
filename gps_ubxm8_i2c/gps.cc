@@ -131,7 +131,7 @@ void GpsUbxM8I2c::Reset() {
  */
 bool GpsUbxM8I2c::sendUBX(uint8_t* message) {
     static uint8_t magicBytes[2] = {0xB5, 0x62};
-    uint16_t len = 4 + (uint16_t)message[2] << 8 + message[3];
+    uint16_t len = 4 + ((uint16_t)message[2] << 8) + message[3];
 
     uint8_t CK_A{0}, CK_B{0};
 
