@@ -12,6 +12,7 @@ enum class GPSFixType : uint8_t {
 
 static uint8_t PVT_MESSAGE[4] = {0x01, 0x07, 0x00, 0x00};
 
+// https://content.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf#%5B%7B%22num%22%3A777%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C0%2C654.8%2Cnull%5D
 #pragma pack(push, 1)
 struct UBX_NAV_PVT_PAYLOAD {
     uint32_t iTOW;
@@ -51,6 +52,7 @@ struct UBX_NAV_PVT_PAYLOAD {
 
 static uint8_t SOL_MESSAGE[4] = {0x01, 0x06, 0x00, 0x00};
 
+// https://content.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf#%5B%7B%22num%22%3A799%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C0%2C525.5%2Cnull%5D
 #pragma pack(push, 1)
 struct UBX_NAV_SOL_PAYLOAD {  // 0x01 0x06
     uint32_t iTOW;
