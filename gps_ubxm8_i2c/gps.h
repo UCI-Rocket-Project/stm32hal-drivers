@@ -9,6 +9,9 @@
 #include "stm32f4xx_hal.h"
 #endif
 
+#include <gpio.h>
+#include <i2c.h>
+
 #include "ubxMessages.h"
 #include "ubxPacket.h"
 
@@ -60,6 +63,7 @@ class GpsUbxM8I2c {
     const PollResult PollUpdate();
     const void* GetSolution();
     void Reset();
+    UBX_NAV_SOL_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload);
 
   private:
     UBXPacketReader _packetReader;

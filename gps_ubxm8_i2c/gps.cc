@@ -1,11 +1,17 @@
 #include "gps.h"
 
+#include <cmath>
+
+#include "coordHelpers.h"
 #include "ubxMessages.h"
 #include "ubxPacket.h"
 
 #define I2C_BUFFER_SIZE 1024
 #define GPS_I2C_TIMEOUT 100
 
+/**
+ * @param ubxMessage one of the messages from `ubxMessages.h` to send.
+ */
 GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin, I2C_HandleTypeDef* i2c, uint8_t* ubxMessage) {
     _packetReader = UBXPacketReader();
     _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
@@ -116,6 +122,36 @@ const void* GpsUbxM8I2c::GetSolution() { return _packetReader.getPayload(); }
 void GpsUbxM8I2c::Reset() {
     _state = GpsUbxM8I2c::State::REQUEST_NOT_SENT;
     _packetReader.reset();
+}
+
+UBX_NAV_SOL_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
+    UBX_NAV_SOL_PAYLOAD payload;
+    double lat = (double)pvtPayload.lat / 1e7;
+    double lon = (double)pvtPayload.lon / 1e7;
+    double alt = (double)pvtPayload.height / 1000;
+    double* ecef = geo_to_ecef(lat, lon, alt);
+
+    payload.iTOW = pvtPayload.iTOW;
+    payload.fTOW = pvtPayload.iTOW;
+    payload.week = 0;  // ???
+    payload.gpsFix = pvtPayload.fixType;
+    payload.flags = pvtPayload.flags;
+    payload.ecefX = ecef[0];
+    payload.ecefY = ecef[1];
+    payload.ecefZ = ecef[2];
+    payload.pAcc = pvtPayload.hAcc;
+
+    // convert velocity to ECEF about the lat and lon
+    double velN = (double)pvtPayload.velN / 1000;
+    double velE = (double)pvtPayload.velE / 1000;
+    double velD = (double)pvtPayload.velD / 1000;
+
+    double cosLat = cos(lat);
+    double sinLat = sin(lat);
+    double cosLon = cos(lon);
+    double sinLon = sin(lon);
+
+    // TODO: actually convert to ECEF
 }
 
 /**
