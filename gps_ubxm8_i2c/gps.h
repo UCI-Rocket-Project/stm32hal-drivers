@@ -54,10 +54,10 @@ class GpsUbxM8I2c {
         DATA_RECEIVE_I2C_FAILED,      // there was a failure in the I2C receive to read the available data from the GPS
         DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
     };
-    GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin);
+    GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin, I2C_HandleTypeDef* i2c, uint8_t* ubxMessage);
     void Init();
     const State GetState();
-    const PollResult PollUpdate(I2C_HandleTypeDef* i2c);
+    const PollResult PollUpdate();
     const void* GetSolution();
     void Reset();
 

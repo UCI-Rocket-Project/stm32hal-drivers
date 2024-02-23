@@ -15,7 +15,7 @@ GpsUbxM8I2c::GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin, I2C
     _ubxMessage = ubxMessage;
 }
 
-GpsUbxM8I2c::Init() { HAL_GPIO_WritePin(_gpioResetPort, _gpioResetPin, GPIO_PIN_SET); }
+void GpsUbxM8I2c::Init() { HAL_GPIO_WritePin(_gpioResetPort, _gpioResetPin, GPIO_PIN_SET); }
 
 const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
 
@@ -27,7 +27,7 @@ const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
  */
 const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate() {
     if (_state == GpsUbxM8I2c::State::REQUEST_NOT_SENT) {
-        sendUBX(_ubxMessage, 4);
+        sendUBX(_ubxMessage);
         _state = GpsUbxM8I2c::State::POLLING_RESPONSE;
     }
 
@@ -131,7 +131,7 @@ void GpsUbxM8I2c::Reset() {
  */
 bool GpsUbxM8I2c::sendUBX(uint8_t* message) {
     static uint8_t magicBytes[2] = {0xB5, 0x62};
-    uint16_t len = 4+(uint16_t)message[2]<<8 + message[3];
+    uint16_t len = 4 + (uint16_t)message[2] << 8 + message[3];
 
     uint8_t CK_A{0}, CK_B{0};
 
