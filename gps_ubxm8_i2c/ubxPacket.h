@@ -16,7 +16,7 @@ enum class UBXPacketUpdateResult {
 /**
  * reads a ubx payload byte-by-byte into an internal buffer. The size of this is configurable with
  * the macro PACKET_READER_PAYLOAD_SIZE
-*/
+ */
 class UBXPacketReader {
   public:
     UBXPacketReader();
