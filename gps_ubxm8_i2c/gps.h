@@ -63,7 +63,7 @@ class GpsUbxM8I2c {
     const PollResult PollUpdate();
     const void* GetSolution();
     void Reset();
-    UBX_NAV_SOL_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload);
+    UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload);
 
   private:
     UBXPacketReader _packetReader;

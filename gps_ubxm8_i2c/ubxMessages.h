@@ -50,27 +50,17 @@ struct UBX_NAV_PVT_PAYLOAD {
 };
 #pragma pack(pop)
 
-static uint8_t SOL_MESSAGE[4] = {0x01, 0x06, 0x00, 0x00};
-
-// https://content.u-blox.com/sites/default/files/products/documents/u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf#%5B%7B%22num%22%3A799%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C0%2C525.5%2Cnull%5D
 #pragma pack(push, 1)
-struct UBX_NAV_SOL_PAYLOAD {  // 0x01 0x06
-    uint32_t iTOW;
-    int32_t fTOW;
-    int16_t week;
+struct UCIRP_GPS_PAYLOAD {  // our custom struct
     GPSFixType gpsFix;
-    uint8_t flags;
-    int32_t ecefX;
-    int32_t ecefY;
-    int32_t ecefZ;
-    uint32_t pAcc;
-    int32_t ecefVX;
-    int32_t ecefVY;
-    int32_t ecefVZ;
-    uint32_t sAcc;
-    uint16_t pDOP;
-    uint8_t reserved1;
-    uint8_t numSV;
-    uint8_t reserved2[4];
+    double ecefX;
+    double ecefY;
+    double ecefZ;
+    double horizontalPositionAcc;
+    double verticalPositionAcc;
+    double ecefVX;
+    double ecefVY;
+    double ecefVZ;
+    double speedAcc;
 };
 #pragma pack(pop)

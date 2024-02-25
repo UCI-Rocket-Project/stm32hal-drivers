@@ -124,34 +124,25 @@ void GpsUbxM8I2c::Reset() {
     _packetReader.reset();
 }
 
-UBX_NAV_SOL_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
-    UBX_NAV_SOL_PAYLOAD payload;
+UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
+    UCIRP_GPS_PAYLOAD payload;
+    payload.gpsFix = pvtPayload.fixType;
+    payload.horizontalPositionAcc = (double)pvtPayload.hAcc / 1000;
+    payload.verticalPositionAcc = (double)pvtPayload.vAcc / 1000;
+    payload.speedAcc = (double)pvtPayload.sAcc / 1000;
+
     double lat = (double)pvtPayload.lat / 1e7;
     double lon = (double)pvtPayload.lon / 1e7;
     double alt = (double)pvtPayload.height / 1000;
-    double* ecef = geo_to_ecef(lat, lon, alt);
 
-    payload.iTOW = pvtPayload.iTOW;
-    payload.fTOW = pvtPayload.iTOW;
-    payload.week = 0;  // ???
-    payload.gpsFix = pvtPayload.fixType;
-    payload.flags = pvtPayload.flags;
-    payload.ecefX = ecef[0];
-    payload.ecefY = ecef[1];
-    payload.ecefZ = ecef[2];
-    payload.pAcc = pvtPayload.hAcc;
+    GPS2ECEF(lat, lon, alt, payload.ecefX, payload.ecefY, payload.ecefZ);
 
     // convert velocity to ECEF about the lat and lon
     double velN = (double)pvtPayload.velN / 1000;
     double velE = (double)pvtPayload.velE / 1000;
     double velD = (double)pvtPayload.velD / 1000;
 
-    double cosLat = cos(lat);
-    double sinLat = sin(lat);
-    double cosLon = cos(lon);
-    double sinLon = sin(lon);
-
-    // TODO: actually convert to ECEF
+    NED2ECEFVel(lat, lon, alt, velN, velE, velD, payload.ecefVX, payload.ecefVY, payload.ecefVZ);
 }
 
 /**
