@@ -1,16 +1,14 @@
 #include "radio_sx127x_spi.h"
 
-RadioSx127xSpi::RadioSx127xSpi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *rstPort, uint16_t rstPin, GPIO_TypeDef *dio0Port, uint16_t dio0Pin, Mode mode,
-                               RfPort rfPort, int frequency, int transmitPower, RampTime rampTime, Bandwidth bandwidth, CodingRate codingRate, SpreadingFactor spreadingFactor, int preambleLength,
-                               int payloadLength, bool crcEnable)
+RadioSx127xSpi::RadioSx127xSpi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *rstPort, uint16_t rstPin, uint8_t syncWord, RfPort rfPort, unsigned int frequency,
+                               unsigned int transmitPower, RampTime rampTime, Bandwidth bandwidth, CodingRate codingRate, SpreadingFactor spreadingFactor, unsigned int preambleLength,
+                               unsigned int payloadLength, bool crcEnable, unsigned int txTimeout, unsigned int rxTimeout)
     : _hspi(hspi),
       _csPort(csPort),
       _csPin(csPin),
       _rstPort(rstPort),
       _rstPin(rstPin),
-      _dio0Port(dio0Port),
-      _dio0Pin(dio0Pin),
-      _mode(mode),
+      _syncWord(syncWord),
       _rfPort(rfPort),
       _frequency(frequency),
       _transmitPower(transmitPower),
@@ -20,7 +18,9 @@ RadioSx127xSpi::RadioSx127xSpi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, ui
       _spreadingFactor(spreadingFactor),
       _preambleLength(preambleLength),
       _payloadLength(payloadLength),
-      _crcEnable(crcEnable) {}
+      _crcEnable(crcEnable),
+      _txTimeout(txTimeout),
+      _rxTimeout(rxTimeout) {}
 
 bool RadioSx127xSpi::Reset() {
     HAL_GPIO_WritePin(_rstPort, _rstPin, GPIO_PIN_RESET);
@@ -66,8 +66,11 @@ RadioSx127xSpi::State RadioSx127xSpi::Init() {
     // set bandwidth, set coding rate, use implicit header mode
     if (WriteRegister(0x1D, 0b00000001 | ((uint8_t)_bandwidth << 4) | ((uint8_t)_codingRate << 1)) == false) _state = ERROR;
 
-    // set spreading factor, use non-continuous mode, set CRC
-    if (WriteRegister(0x0E, ((uint8_t)_spreadingFactor << 4) | ((uint8_t)_crcEnable << 2)) == false) _state = ERROR;
+    // set spreading factor, use non-continuous mode, set CRC, set RX timeout MSB
+    if (WriteRegister(0x1E, ((uint8_t)_spreadingFactor << 4) | ((uint8_t)_crcEnable << 2) | ((uint8_t)(0x3 & (_rxTimeout >> 8)))) == false) _state = ERROR;
+
+    // set RX timeout LSB
+    if (WriteRegister(0x1F, (uint8_t)_rxTimeout) == false) _state = ERROR;
 
     // set preamble length
     if (WriteRegister(0x20, (uint8_t)(_preambleLength >> 8)) == false) _state = ERROR;
@@ -76,10 +79,22 @@ RadioSx127xSpi::State RadioSx127xSpi::Init() {
     // set payload length
     if (WriteRegister(0x22, (uint8_t)_payloadLength) == false) _state = ERROR;
 
-    // if radio is only transmitting, set DIO0 to TxDone IRQ, else DIO0 is RxDone IRQ (default)
-    if (_mode == TX_ONLY) {
-        if (WriteRegister(0x40, 0b01000000) == false) _state = ERROR;
+    if (_spreadingFactor == SF6) {
+        // LoRa detection optimize
+        if (WriteRegister(0x31, 0x05) == false) _state = ERROR;
+
+        // LoRa detection threshold
+        if (WriteRegister(0x37, 0x0C) == false) _state = ERROR;
+    } else {
+        // LoRa detection optimize
+        if (WriteRegister(0x31, 0x03) == false) _state = ERROR;
+
+        // LoRa detection threshold
+        if (WriteRegister(0x37, 0x0A) == false) _state = ERROR;
     }
+
+    // set sync word
+    if (WriteRegister(0x39, (uint8_t)_syncWord) == false) _state = ERROR;
 
     // standby mode
     if (WriteRegister(0x01, 0b10000001 | ((uint8_t)_rfPort << 3)) == false) _state = ERROR;
@@ -88,11 +103,6 @@ RadioSx127xSpi::State RadioSx127xSpi::Init() {
 }
 
 RadioSx127xSpi::State RadioSx127xSpi::Transmit(const uint8_t *payload) {
-    if (_mode != TXRX && _mode != TX_ONLY) {
-        _state = ERROR;
-        return _state;
-    }
-
     switch (_state) {
         case IDLE: {
             _state = TX;
@@ -106,23 +116,25 @@ RadioSx127xSpi::State RadioSx127xSpi::Transmit(const uint8_t *payload) {
             if (HAL_SPI_Transmit(_hspi, (uint8_t *)payload, _payloadLength, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
-            // if radio is bidirectional, set DIO0 to TxDone IRQ, else DIO0 should already be in this mode
-            if (_mode == TXRX) {
-                if (WriteRegister(0x40, 0b01000000) == false) _state = ERROR;
-            }
-
             // start TX
             if (WriteRegister(0x01, 0b10000011 | ((uint8_t)_rfPort << 3)) == false) _state = ERROR;
+
+            _txStartTime = HAL_GetTick();
 
             break;
         }
 
         case TX: {
-            if (HAL_GPIO_ReadPin(_dio0Port, _dio0Pin) == GPIO_PIN_SET) {
-                _state = IDLE;
+            uint8_t irqFlags = 0x00;
+            if (ReadRegister(0x12, &irqFlags) == false) _state = ERROR;
+
+            if ((irqFlags & 0x08) != 0) {
+                _state = TX_COMPLETE;
 
                 // clear TxDone IRQ
-                if (WriteRegister(0x12, 0b00001000) == false) _state = ERROR;
+                if (WriteRegister(0x12, 0x08) == false) _state = ERROR;
+            } else if (HAL_GetTick() - _txStartTime > _txTimeout) {
+                _state = TX_TIMEOUT;
             }
             break;
         }
@@ -134,19 +146,9 @@ RadioSx127xSpi::State RadioSx127xSpi::Transmit(const uint8_t *payload) {
 }
 
 RadioSx127xSpi::State RadioSx127xSpi::Receive(uint8_t *payload, int *rssi) {
-    if (_mode != TXRX && _mode != RX_ONLY) {
-        _state = ERROR;
-        return _state;
-    }
-
     switch (_state) {
         case IDLE: {
             _state = RX;
-
-            if (_mode == TXRX) {
-                // if radio is bidirectional, set DIO0 to RxDone IRQ, else DIO0 should already be in this mode
-                if (WriteRegister(0x40, 0b00000000) == false) _state = ERROR;
-            }
 
             // start RX single
             if (WriteRegister(0x01, 0b10000110 | ((uint8_t)_rfPort << 3)) == false) _state = ERROR;
@@ -155,35 +157,66 @@ RadioSx127xSpi::State RadioSx127xSpi::Receive(uint8_t *payload, int *rssi) {
         }
 
         case RX: {
-            if (HAL_GPIO_ReadPin(_dio0Port, _dio0Pin) == GPIO_PIN_SET) {
-                _state = IDLE;
+            uint8_t irqFlags = 0x00;
+            if (ReadRegister(0x12, &irqFlags) == false) _state = ERROR;
+
+            if ((irqFlags & 0x40) != 0) {
+                _state = RX_COMPLETE;
+
+                // standby mode
+                if (WriteRegister(0x01, 0b10000001 | ((uint8_t)_rfPort << 3)) == false) _state = ERROR;
 
                 // clear RxDone IRQ
-                if (WriteRegister(0x12, 0b01000000) == false) _state = ERROR;
+                if (WriteRegister(0x12, 0x40) == false) _state = ERROR;
+
+                // check valid CRC
+                if ((irqFlags & 0x20) != 0) {
+                    _state = RX_CRC_ERROR;
+
+                    // clear CRC Error IRQ
+                    if (WriteRegister(0x12, 0x20) == false) _state = ERROR;
+
+                    break;
+                }
+
+                // set FIFO address pointer
+                if (WriteRegister(0x0D, 0x00) == false) _state = ERROR;
+
+                // read payload from FIFO
+                HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
+                if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+                if (HAL_SPI_Receive(_hspi, (uint8_t *)payload, _payloadLength, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
+                HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
+
+                // read RSSI
+                uint8_t data;
+                if (ReadRegister(0x1A, &data) == false) _state = ERROR;
+                if (_rfPort == HF) {
+                    *rssi = data - 157;
+                } else if (_rfPort == LF) {
+                    *rssi = data - 164;
+                }
+            } else if (irqFlags & 0x80) {
+                _state = RX_TIMEOUT;
+
+                // clear RxTimeout IRQ
+                if (WriteRegister(0x12, 0x80) == false) _state = ERROR;
             }
-
-            // set FIFO address pointer
-            if (WriteRegister(0x0D, 0x00) == false) _state = ERROR;
-
-            // read payload from FIFO
-            HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-            if (HAL_SPI_Transmit(_hspi, (uint8_t *)(const uint8_t[]){0x00}, 1, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
-            if (HAL_SPI_Receive(_hspi, (uint8_t *)payload, _payloadLength, SERIAL_TIMEOUT) != HAL_OK) _state = ERROR;
-            HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
-
-            // read RSSI
-            uint8_t data;
-            if (ReadRegister(0x1A, &data) == false) _state = ERROR;
-            if (_rfPort == HF) {
-                *rssi = data - 157;
-            } else if (_rfPort == LF) {
-                *rssi = data - 164;
-            }
+            break;
         }
 
         default:
             break;
     }
+    return _state;
+}
+
+RadioSx127xSpi::State RadioSx127xSpi::ClearState() {
+    _state = IDLE;
+
+    // clear all IRQ
+    if (WriteRegister(0x12, 0xFF) == false) _state = ERROR;
+
     return _state;
 }
 

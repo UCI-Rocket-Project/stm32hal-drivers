@@ -12,16 +12,7 @@
 
 class RadioSx127xSpi {
   public:
-    enum State { IDLE, TX, RX, ERROR };
-
-    enum Mode {
-        // bidirectional
-        TXRX,
-        // transmit only
-        TX_ONLY,
-        // receive only
-        RX_ONLY
-    };
+    enum State { IDLE, TX, TX_COMPLETE, TX_TIMEOUT, RX, RX_COMPLETE, RX_CRC_ERROR, RX_TIMEOUT, ERROR };
 
     enum RfPort {
         // high frequency port 779-1020 MHz
@@ -107,8 +98,8 @@ class RadioSx127xSpi {
      * @param csPin chip select GPIO pin
      * @param rstPort reset GPIO port
      * @param rstPin reset GPIO pin
-     * @param dio0Port DIO0 GPIO port
-     * @param dio0Pin DIO0 GPIO pin
+     * @param syncWord LoRa sync word
+     * @param rfPort transponder physical RF port
      * @param frequency RF center frequency in Hz, valid range 137000000-525000000, 779000000-1020000000
      * @param transmitPower transmit power in dBm, valid range 2-15
      * @param rampTime PA ramp time
@@ -118,10 +109,12 @@ class RadioSx127xSpi {
      * @param preambleLength preamble length in symbols, valid range 6-65535
      * @param payloadLength packet length in bytes, valid range 1-255
      * @param crcEnable enable CRC
+     * @param txTimeout TX timeout in milliseconds
+     * @param rxTimeout RX timeout in number of symbols, valid range 4-1023, timeout in seconds = rxTimeout * (2 ** spreadingFactor) / bandwidth
      */
-    RadioSx127xSpi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *rstPort, uint16_t rstPin, GPIO_TypeDef *dio0Port, uint16_t dio0Pin, Mode mode, RfPort rfPort,
-                   int frequency, int transmitPower, RampTime rampTime, Bandwidth bandwidth, CodingRate codingRate, SpreadingFactor spreadingFactor, int preambleLength, int payloadLength,
-                   bool crcEnable);
+    RadioSx127xSpi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, GPIO_TypeDef *rstPort, uint16_t rstPin, uint8_t syncWord, RfPort rfPort, unsigned int frequency,
+                   unsigned int transmitPower, RampTime rampTime, Bandwidth bandwidth, CodingRate codingRate, SpreadingFactor spreadingFactor, unsigned int preambleLength, unsigned int payloadLength,
+                   bool crcEnable, unsigned int txTimeout, unsigned int rxTimeout);
 
     /**
      * @brief Resets radio
@@ -138,7 +131,7 @@ class RadioSx127xSpi {
     /**
      * @brief Transmits payload
      * @param payload pointer to payload buffer, must be the same length as specified by payloadLength
-     * @retval Current state, returns to IDLE when transmit complete
+     * @retval Current state, state is IDLE when transmit complete
      */
     State Transmit(const uint8_t *payload);
 
@@ -146,9 +139,15 @@ class RadioSx127xSpi {
      * @brief Listens and receives one packet
      * @param payload pointer to payload buffer, must be the same length as specified by payloadLength
      * @param rssi received signal strength indication, this is an output
-     * @retval Current state, returns to IDLE when receive complete
+     * @retval Current state, state is RX_COMPLETE when a new valid packet is received, state is IDLE when timeout or CRC error
      */
     State Receive(uint8_t *payload, int *rssi);
+
+    /**
+     * @brief Resets state to IDLE
+     * @retval Current state
+     */
+    State ClearState();
 
   private:
     /**
@@ -166,18 +165,20 @@ class RadioSx127xSpi {
     uint16_t _csPin;
     GPIO_TypeDef *_rstPort;
     uint16_t _rstPin;
-    GPIO_TypeDef *_dio0Port;
-    uint16_t _dio0Pin;
-    Mode _mode;
+    uint8_t _syncWord;
     RfPort _rfPort;
-    int _frequency;
-    int _transmitPower;
+    unsigned int _frequency;
+    unsigned int _transmitPower;
     RampTime _rampTime;
     Bandwidth _bandwidth;
     CodingRate _codingRate;
     SpreadingFactor _spreadingFactor;
-    int _preambleLength;
-    int _payloadLength;
+    unsigned int _preambleLength;
+    unsigned int _payloadLength;
     bool _crcEnable;
+    unsigned int _txTimeout;
+    unsigned int _rxTimeout;
+
+    uint32_t _txStartTime;
     State _state;
 };
