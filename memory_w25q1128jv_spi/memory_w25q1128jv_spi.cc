@@ -117,10 +117,11 @@ MemoryW25q1128jvSpi::State MemoryW25q1128jvSpi::ChipWrite(uint8_t (&data)[64]) {
 
             // chip enable instruction to enable chip
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-            if (HAL_SPI_Transmit(_hspi, CHIP_ENABLE, 1, SPI_Timeout) != HAL_OK) _state = State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, CHIP_ENABLE, 1, SPI_Timeout) != HAL_OK) {
+                _state = State::ERROR;
+                break;
+            }
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
-
-            break;
         }
 
         case State::PAGE_WRITE: {
@@ -135,11 +136,15 @@ MemoryW25q1128jvSpi::State MemoryW25q1128jvSpi::ChipWrite(uint8_t (&data)[64]) {
 
             // Write 64 byte Data  into memory
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-            if (HAL_SPI_Transmit(_hspi, PAGE_PROGRAM, 4, SPI_Timeout) != HAL_OK) _state = State::ERROR;
-            if (HAL_SPI_Transmit(_hspi, data, 64, SPI_Timeout) != HAL_OK) _state = State::ERROR;
+            if (HAL_SPI_Transmit(_hspi, PAGE_PROGRAM, 4, SPI_Timeout) != HAL_OK) {
+                _state = State::ERROR;
+                break;
+            }
+            if (HAL_SPI_Transmit(_hspi, data, 64, SPI_Timeout) != HAL_OK) {
+                _state = State::ERROR;
+                break;
+            }
             HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
-
-            break;
         }
 
         case State::COMPLETE: {
