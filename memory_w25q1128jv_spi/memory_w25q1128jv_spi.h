@@ -33,8 +33,8 @@ class MemoryW25q1128jvSpi {
 
     /**
      * @brief Initialises the memory by finding the first free 64 bytes
-     * @retval Operation status, 0 for success
-     * @retval Operation status, -1 for SPI failure
+     * @retval Operation Sucess, 0 for success
+     * @retval Operation Failure, -1 for wrong devoce
      */
     int Init();
 
@@ -49,36 +49,42 @@ class MemoryW25q1128jvSpi {
 
     /**
      * @brief Reads the first status register from memort
-     * @retval Operation status, value 0-8 for success
+     * @retval Operation Sucess, Register value from 0-15 for success
      * @retval Operation Failure, -1 for SPI protocol failure
      */
     int ReadStatusReg1();
 
     /**
      * @brief Erases all data on chip
-     * @retval Operation status, 0 for success
+     * @retval Operation Sucess, 0 for success
+     * @retval Operation Failure, -1 for SPI protocol failure
      */
     int ChipErase();
 
     /**
-     * @brief Writes Telemetrydata stuct into TelemetryData Data_Bundle[4] array
-     *         must be a pointer to a 64 byte array
-     * @retval Operation status, 0 for success
+     * @brief Writes a 64 byte array into flasg memory,
+     *        Auto increments from address found in Init
+     * @retval Operation FSM status
      */
     State ChipWrite(uint8_t (&data)[64]);
 
     /**
-     * @brief Reads read_addess page data and returns pointer to Data_Bundle array
-     *
+     * @brief Reads 64 bytes starting from read_address input,
+     *        ChipRead outout value is updated in input chipData
+     * @retval Operation Sucess, 0 for success
+     * @retval Operation Failure, -1 for SPI protocol failure
      */
     int ChipRead(uint32_t read_address, uint8_t (&chipData)[64]);
 
     /**
-     * @brief Dumps each 64 byte data package from address 0, auto increments data package
-     * @retval Operation status, 0 for success
+     * @brief Dumps each 64 byte data package from address 0,
+     *        auto increments each 64 byte data package
+     * @retval Operation Sucess, current read address value for success
+     * @retval Operation Failure, -1 for SPI protocol failure
      */
     int ChipReadDump(uint8_t (&chipData)[64]);
 
+    /* 64 byte structs for use in UCIRP projects*/
 #pragma pack(push, 1)
     struct EcuTelemetryData {
         uint8_t type = 0x10;

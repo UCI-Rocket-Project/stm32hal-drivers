@@ -17,7 +17,7 @@ int MemoryW25q1128jvSpi::Init() {
     uint8_t buffer[64];
 
     // Reads Chip ID, if chip ID is not W25Q128JV_MEMORY, then return -1
-    if (DeviceID() != 0xEF17) return ERROR;
+    if (DeviceID() != 0xEF17) return -1;
 
     // do while to find the first free 64 byte address
     do {
@@ -45,7 +45,7 @@ int MemoryW25q1128jvSpi::DeviceID() {
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
     // returns the 2 bytes as a uint16_t
-    return (uint16_t)(deviceValue[0] << 8 | deviceValue[1]);
+    return (int)(deviceValue[0] << 8 | deviceValue[1]);
 }
 
 int MemoryW25q1128jvSpi::ReadStatusReg1() {
@@ -77,7 +77,7 @@ int MemoryW25q1128jvSpi::ChipErase() {
     uint8_t CHIP_ENABLE[1] = {0x06};
 
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-    if (HAL_SPI_Transmit(_hspi, CHIP_ENABLE, 1, SPI_Timeout) != HAL_OK) return 1;
+    if (HAL_SPI_Transmit(_hspi, CHIP_ENABLE, 1, SPI_Timeout) != HAL_OK) return -1;
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
     ;
     while ((MemoryW25q1128jvSpi::ReadStatusReg1() & 0x02) != 2) {
@@ -87,7 +87,7 @@ int MemoryW25q1128jvSpi::ChipErase() {
     uint8_t CHIP_ERASE[1] = {0xC7};
 
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-    if (HAL_SPI_Transmit(_hspi, CHIP_ERASE, 1, SPI_Timeout) != HAL_OK) return 1;
+    if (HAL_SPI_Transmit(_hspi, CHIP_ERASE, 1, SPI_Timeout) != HAL_OK) return -1;
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
     // Waits until busy bit is = 0
@@ -172,8 +172,8 @@ int MemoryW25q1128jvSpi::ChipRead(uint32_t readAddress, uint8_t (&chipData)[64])
 
     // Reads address page in memory
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);
-    if (HAL_SPI_Transmit(_hspi, READ_DATA, 4, SPI_Timeout) != HAL_OK) return 1;
-    if (HAL_SPI_Receive(_hspi, chipData, 64, SPI_Timeout) != HAL_OK) return 1;
+    if (HAL_SPI_Transmit(_hspi, READ_DATA, 4, SPI_Timeout) != HAL_OK) return -1;
+    if (HAL_SPI_Receive(_hspi, chipData, 64, SPI_Timeout) != HAL_OK) return -1;
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
     // Waits until busy bit is = 0
