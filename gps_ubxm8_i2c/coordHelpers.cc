@@ -1,6 +1,7 @@
 #include "coordHelpers.h"
 
-#include <math.h>
+#include <cmath>
+#define M_PI 3.14159265358979323
 
 // Constants for WGS84 ellipsoid
 const double WGS84_A = 6378137.0;                   // semi-major axis in meters
