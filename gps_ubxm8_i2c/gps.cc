@@ -1,7 +1,7 @@
 #include "gps.h"
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
 #include "coordHelpers.h"
 #include "ubxMessages.h"
