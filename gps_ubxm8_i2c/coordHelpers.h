@@ -1,3 +1,4 @@
+#pragma once
 // Convert degrees to radians
 double Deg2Rad(double deg);
 
