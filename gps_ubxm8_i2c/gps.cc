@@ -135,14 +135,14 @@ UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
     double lon = (double)pvtPayload.lon / 1e7;
     double alt = (double)pvtPayload.height / 1000;
 
-    GPS2ECEF(lat, lon, alt, payload.ecefX, payload.ecefY, payload.ecefZ);
+    Gps2Ecef(lat, lon, alt, payload.ecefX, payload.ecefY, payload.ecefZ);
 
     // convert velocity to ECEF about the lat and lon
     double velN = (double)pvtPayload.velN / 1000;
     double velE = (double)pvtPayload.velE / 1000;
     double velD = (double)pvtPayload.velD / 1000;
 
-    NED2ECEFVel(lat, lon, alt, velN, velE, velD, payload.ecefVX, payload.ecefVY, payload.ecefVZ);
+    Ned2EcefVel(lat, lon, alt, velN, velE, velD, payload.ecefVX, payload.ecefVY, payload.ecefVZ);
 }
 
 /**

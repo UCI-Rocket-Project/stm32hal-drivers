@@ -14,7 +14,7 @@ double Deg2Rad(double deg) { return deg * M_PI / 180.0; }
 double Rad2Deg(double rad) { return rad * 180.0 / M_PI; }
 
 // Convert GPS coordinates (latitude, longitude, altitude) to ECEF coordinates
-void GPS2ECEF(double lat, double lon, double alt, double& x, double& y, double& z) {
+void Gps2Ecef(double lat, double lon, double alt, double& x, double& y, double& z) {
     double cos_lat = cos(Deg2Rad(lat));
     double sin_lat = sin(Deg2Rad(lat));
     double cos_lon = cos(Deg2Rad(lon));
@@ -28,9 +28,9 @@ void GPS2ECEF(double lat, double lon, double alt, double& x, double& y, double& 
 }
 
 // Convert NED (North-East-Down) velocity to ECEF velocity
-void NED2ECEFVel(double lat, double lon, double alt, double vn, double ve, double vd, double& vx, double& vy, double& vz) {
+void Ned2EcefVel(double lat, double lon, double alt, double vn, double ve, double vd, double& vx, double& vy, double& vz) {
     double x, y, z;
-    GPS2ECEF(lat, lon, alt, x, y, z);
+    Gps2Ecef(lat, lon, alt, x, y, z);
 
     // Convert NED velocity to ECEF velocity
     vx = -ve * sin(Deg2Rad(lon)) - vn * sin(Deg2Rad(lat)) * cos(Deg2Rad(lon)) + vd * cos(Deg2Rad(lat)) * cos(Deg2Rad(lon));
