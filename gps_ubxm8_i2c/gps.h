@@ -4,13 +4,9 @@
 // header on your machine that can get you `I2C_HandleTypeDef`
 #if defined(STM32F1)
 #include "stm32f1xx_hal.h"
-#endif
-#if defined(STM32F4XX)
+#elif defined(STM32F4xx)
 #include "stm32f4xx_hal.h"
 #endif
-
-#include <gpio.h>
-#include <i2c.h>
 
 #include "ubxMessages.h"
 #include "ubxPacket.h"
