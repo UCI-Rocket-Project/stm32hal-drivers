@@ -1,6 +1,7 @@
 #include "gps.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include "coordHelpers.h"
 #include "ubxMessages.h"
@@ -127,8 +128,7 @@ void GpsUbxM8I2c::Reset() {
 UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
     UCIRP_GPS_PAYLOAD payload;
     payload.gpsFix = pvtPayload.fixType;
-    payload.horizontalPositionAcc = (double)pvtPayload.hAcc / 1000;
-    payload.verticalPositionAcc = (double)pvtPayload.vAcc / 1000;
+    payload.positionAcc = std::max((double)pvtPayload.hAcc / 1000, (double)pvtPayload.vAcc / 1000);
     payload.speedAcc = (double)pvtPayload.sAcc / 1000;
 
     double lat = (double)pvtPayload.lat / 1e7;
