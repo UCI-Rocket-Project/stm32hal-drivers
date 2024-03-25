@@ -23,6 +23,7 @@
  *     while(1) {
  *        if(myGPS.PollUpdate() == GPS::PollResult::POLL_FINISHED) {
  *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.GetSolution();
+ *            UCIRP_GPS_PAYLOAD ecefData = myGPS.ConvertPayloadToECEF(pvtData);
  *            myGPS.Reset();
  *        }
  *     }
