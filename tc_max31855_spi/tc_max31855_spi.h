@@ -1,16 +1,9 @@
-/*
- * tc_max31855_spi.h
- *
- *  Created on: Jan 21, 2024
- *      Author: Alexandra Zhang Jiang
- */
-
 #pragma once
 
+#if defined(STM32F1)
 #include "stm32f1xx_hal.h"
-
-#ifndef SERIAL_TIMEOUT
-#define SERIAL_TIMEOUT 10
+#elif defined(STM32F4xx)
+#include "stm32f4xx_hal.h"
 #endif
 
 class TcMax31855Spi {
@@ -27,16 +20,15 @@ class TcMax31855Spi {
      * @param hspi SPI bus handler
      * @param csPort chip select GPIO port
      * @param csPin chip select GPIO pin
+     * @param timeout serial bus timeout in milliseconds
      */
-    TcMax31855Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin);
+    TcMax31855Spi(SPI_HandleTypeDef *hspi, GPIO_TypeDef *csPort, uint16_t csPin, uint32_t timeout);
 
     Data Read();
 
   private:
-    // SPI bus handler
     SPI_HandleTypeDef *_hspi;
-    // chip select GPIO port
     GPIO_TypeDef *_csPort;
-    // chip select GPIO pin
     uint16_t _csPin;
+    uint32_t _timeout;
 };
