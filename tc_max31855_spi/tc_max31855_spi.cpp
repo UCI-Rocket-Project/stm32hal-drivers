@@ -8,9 +8,9 @@ TcMax31855Spi::Data TcMax31855Spi::Read() {
 
     uint8_t buffer[4] = {0};
     uint8_t temp[4] = {0};
-    HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);                     // start SPI transaction
-    if (HAL_SPI_Receive(_hspi, buffer, 4, timeout) != HAL_OK) return data;  // read 8-bits four times from miso line
-    uint32_t dummy = _hspi->Intance->DR;                                    // flush
+    HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);                      // start SPI transaction
+    if (HAL_SPI_Receive(_hspi, buffer, 4, _timeout) != HAL_OK) return data;  // read 8-bits four times from miso line
+    uint32_t dummy = _hspi->Instance->DR;                                    // flush
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
     uint32_t d = ((uint32_t)buffer[0] << 24) | ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | ((uint32_t)buffer[3]);  // MSB
 
