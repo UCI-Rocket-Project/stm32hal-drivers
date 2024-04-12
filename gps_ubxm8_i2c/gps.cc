@@ -91,14 +91,15 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate() {
                 }
             }
 
-            if (!_packetReader.isInProgress()) {
-                return GpsUbxM8I2c::PollResult::NO_UBX_DATA;
-            }
-
             if (_packetReader.isComplete()) {
                 _state = GpsUbxM8I2c::State::RESPONSE_READY;
                 return GpsUbxM8I2c::PollResult::POLL_JUST_FINISHED;
             }
+
+            if (!_packetReader.isInProgress()) {
+                return GpsUbxM8I2c::PollResult::NO_UBX_DATA;
+            }
+
             return GpsUbxM8I2c::PollResult::RECEIVE_IN_PROGRESS;
         }
     }
