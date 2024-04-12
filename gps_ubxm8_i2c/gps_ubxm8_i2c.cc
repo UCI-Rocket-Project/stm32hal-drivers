@@ -128,7 +128,7 @@ void GpsUbxM8I2c::Reset() {
     _packetReader.reset();
 }
 
-UCIRP_GPS_PAYLOAD GpsUbxM8I2c::ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
+UCIRP_GPS_PAYLOAD GpsUbxM8I2c::ConvertPayloadToECEF(const UBX_NAV_PVT_PAYLOAD& pvtPayload) {
     UCIRP_GPS_PAYLOAD payload;
     payload.gpsFix = pvtPayload.fixType;
     payload.positionAcc = std::max((double)pvtPayload.hAcc / 1000, (double)pvtPayload.vAcc / 1000);
