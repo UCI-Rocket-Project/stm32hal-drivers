@@ -34,7 +34,9 @@ const GpsUbxM8I2c::State GpsUbxM8I2c::GetState() { return _state; }
  */
 const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate() {
     if (_state == GpsUbxM8I2c::State::REQUEST_NOT_SENT) {
-        sendUBX(_ubxMessage);
+        if(!sendUBX(_ubxMessage)) {
+            return GpsUbxM8I2c::PollResult::REQUEST_SEND_FAILED;
+        }
         _state = GpsUbxM8I2c::State::POLLING_RESPONSE;
     }
 
@@ -143,6 +145,8 @@ UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(UBX_NAV_PVT_PAYLOAD pvtPayload) {
     double velD = (double)pvtPayload.velD / 1000;
 
     Ned2EcefVel(lat, lon, alt, velN, velE, velD, payload.ecefVX, payload.ecefVY, payload.ecefVZ);
+
+    return payload;
 }
 
 /**

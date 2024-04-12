@@ -74,7 +74,8 @@ class GpsUbxM8I2c {
         NO_UBX_DATA,                  // data read successfully but no UBX start bytes found
         DATA_LEN_POLL_FAILED,         // there was a failure in the I2C mem read for getting the quantity of data available
         DATA_RECEIVE_I2C_FAILED,      // there was a failure in the I2C receive to read the available data from the GPS
-        DATA_RECEIVE_CHECKSUM_FAILED  // we received UBX data but the checksum didn't match the message.
+        DATA_RECEIVE_CHECKSUM_FAILED, // we received UBX data but the checksum didn't match the message.
+        REQUEST_SEND_FAILED           // the request to the GPS failed (probably i2c transmit error)
     };
     GpsUbxM8I2c(GPIO_TypeDef* gpioResetPort, uint16_t gpioResetPin, I2C_HandleTypeDef* i2c, uint8_t* ubxMessage);
     void Init();
