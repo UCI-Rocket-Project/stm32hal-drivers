@@ -18,16 +18,38 @@
  * This class keeps its own finite state machine for abstracting away polling data availability and retrying requests.
  * An example usage is as follows:
  * ```
- *     GPS myGPS(GPS_RESET_PORT, GPS_RESET_PIN, &hi2c3, PVT_MESSAGE);
- *     myGPS.Init();
- *     while(1) {
- *        if(myGPS.PollUpdate() == GPS::PollResult::POLL_FINISHED) {
- *            UBX_NAV_PVT_PAYLOAD pvtData = myGPS.GetSolution();
- *            UCIRP_GPS_PAYLOAD ecefData = myGPS.ConvertPayloadToECEF(pvtData);
- *            myGPS.Reset();
- *        }
- *     }
- * ```
+  int main(void)
+  {
+      HAL_Init();
+  
+      SystemClock_Config();
+
+      MX_GPIO_Init();
+
+      MX_I2C1_Init();
+
+      GPS gps(GPS_RST_GPIO_Port, GPS_RST_Pin, &hi2c1, PVT_MESSAGE);
+      gps.Init();
+      HAL_Delay(1000);
+
+      int lastITOW = 0;
+      while(1) {
+          volatile GPS::PollResult res = gps.PollUpdate();    
+          auto state = gps.GetState();
+          if(state == GPS::State::RESPONSE_READY) {
+              UBX_NAV_PVT_PAYLOAD sol = *(UBX_NAV_PVT_PAYLOAD*)gps.GetSolution();            
+              volatile int diff = sol.iTOW - lastITOW;
+              lastITOW = sol.iTOW;
+              if((GPSFixType)sol.fixType == GPSFixType::FIX_3D) {
+                  HAL_Delay(1000);
+              }
+              gps.Reset();
+          } else {
+              HAL_Delay(100);
+          }
+      }
+  }
+  ```
  *
  * After a packet is received, you _need_ to call the reset method.
  * If you don't, `pollUpdate` will just do nothing and return a `POLL_ALREADY_FINISHED` response.
