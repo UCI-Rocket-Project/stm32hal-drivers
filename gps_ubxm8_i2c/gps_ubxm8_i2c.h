@@ -81,9 +81,8 @@ class GpsUbxM8I2c {
     void Init();
     const State GetState();
     const PollResult PollUpdate();
-    const void* GetSolution();
+    const UCIRP_GPS_PAYLOAD  GetSolution();
     void Reset();
-    UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(const UBX_NAV_PVT_PAYLOAD& pvtPayload);
 
   private:
     UBXPacketReader _packetReader;
@@ -93,4 +92,5 @@ class GpsUbxM8I2c {
     I2C_HandleTypeDef* _i2c;
     uint8_t* _ubxMessage;
     bool sendUBX(uint8_t* message);
+    UCIRP_GPS_PAYLOAD ConvertPayloadToECEF(const UBX_NAV_PVT_PAYLOAD& pvtPayload);
 };

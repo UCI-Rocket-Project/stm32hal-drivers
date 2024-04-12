@@ -117,7 +117,10 @@ const GpsUbxM8I2c::PollResult GpsUbxM8I2c::PollUpdate() {
  *
  * @retval pointer to payload. Can be casted to a struct in ubxMessages.
  */
-const void* GpsUbxM8I2c::GetSolution() { return _packetReader.getPayload(); }
+const UCIRP_GPS_PAYLOAD GpsUbxM8I2c::GetSolution() { 
+    UBX_NAV_PVT_PAYLOAD pvtPayload = *(UBX_NAV_PVT_PAYLOAD*)_packetReader.getPayload();
+    return ConvertPayloadToECEF(pvtPayload);
+}
 
 /**
  * @brief Puts the GPS state back to its initial value so that `pollUpdate` knows
