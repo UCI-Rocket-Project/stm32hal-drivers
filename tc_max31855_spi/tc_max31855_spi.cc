@@ -8,7 +8,7 @@ TcMax31855Spi::Data TcMax31855Spi::Read() {
 
     uint8_t buffer[4] = {0};
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_RESET);                        // start SPI transaction
-    HAL_StatusTypeDef response = HAL_SPI_Receive(_hspi, buffer, 4, _timeout);  // read 8-bits four times from miso line
+    HAL_StatusTypeDef response = HAL_SPI_Receive(_hspi, buffer, 4, _timeout);  // read 8-bits four times from MISO line
     HAL_GPIO_WritePin(_csPort, _csPin, GPIO_PIN_SET);
 
     if (response != HAL_OK) return data;
@@ -19,7 +19,6 @@ TcMax31855Spi::Data TcMax31855Spi::Read() {
     if (d == 0) return data;
     // detect fault
     if (d & 0x10000) return data;
-    data.valid = true;
 
     // TC temperature is bit 31 to bit 18
     int32_t tcTempBits = ((d >> 18) & 0x3FFF);
@@ -31,5 +30,6 @@ TcMax31855Spi::Data TcMax31855Spi::Read() {
     if (inTempBits & (1 << 11)) inTempBits |= 0xFFFFF000;  // sign extend
     data.internalTemperature = inTempBits / 16.0f;         // 0.0625 degrees per LSB
 
+    data.valid = true;
     return data;
 }
