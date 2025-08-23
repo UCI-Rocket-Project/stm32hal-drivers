@@ -40,9 +40,9 @@ altimeter_ms5607_spi
 Main branch is locked and all changes require a PR.
 
 6. Naming conventions are as follows:
-    Files: snake_case.c
-    Variables: camelCase
-    Constant variables: UPPER_SNAKE_CASE
-    Functions: PascalCase
-    Types: PascalCase
-    Private variables within classes: _camelCaseWithUnderscorePrefix
+    * Files: snake_case.c
+    * Variables: camelCase
+    * Constant variables: UPPER_SNAKE_CASE
+    * Functions: PascalCase
+    * Types: PascalCase
+    * Private variables within classes: _camelCaseWithUnderscorePrefix
