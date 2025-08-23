@@ -38,3 +38,11 @@ altimeter_ms5607_spi
 
 5. All contributed code should be formatted with `clang-format` and screened with `pre-commit`.\
 Main branch is locked and all changes require a PR.
+
+6. Naming conventions are as follows:
+    Files: snake_case.c
+    Variables: camelCase
+    Constant variables: UPPER_SNAKE_CASE
+    Functions: PascalCase
+    Types: PascalCase
+    Private variables within classes: _camelCaseWithUnderscorePrefix
